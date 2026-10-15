@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://smatyi111.github.io/apextradingtools/sitemap.xml
