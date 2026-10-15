@@ -117,7 +117,12 @@ h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); margin: 0 0 32px; text-align: cent
 .social a { color: var(--muted); }
 .disclaimer { font-size: 0.8rem; opacity: 0.75; margin-top: 14px; }
 
+/* short sections read better centred; long text stays left-aligned */
+#contact .wrap { text-align: center; }
+
 @media (max-width: 640px) {
+  .footer-inner { flex-direction: column; align-items: center; text-align: center; }
+  .disclaimer { text-align: center; }
   .nav nav { gap: 14px; }
   .nav nav a:nth-child(n+4) { display: none; }
   .section { padding: 56px 0; }
