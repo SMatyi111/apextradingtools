@@ -51,7 +51,49 @@
     </div>
     <p class="fine">Size, not direction &middot; next hour only &middot; prototype, no live results yet</p>
   </div>
-  <img class="hero-img" src="assets/newsvol-nfp.jpg" alt="MT5 chart of EURUSD on 2 October 2026 with the APXTT panel: NFP in 5 minutes, expect about 56 pips, usual hour about 18, ATR(14) about 12" width="1080" height="920" style="max-width:720px">
+  <figure class="rp" id="nfp-replay" data-src="assets/nfp-replay.json">
+    <div class="rp-head">
+      <span class="rp-tag">Replay of real EURUSD data &middot; 2 Oct 2026 &middot; not live</span>
+      <span class="rp-sym">EURUSD &middot; H1</span>
+    </div>
+    <div class="rp-stage">
+      <img class="rp-fallback" src="assets/newsvol-nfp.jpg" alt="MT5 chart of EURUSD on 2 October 2026 with the APXTT panel: NFP in 5 minutes, expect about 56 pips, usual hour about 18, ATR(14) about 12" width="1080" height="920">
+      <canvas role="img" aria-label="Animated replay of EURUSD hourly candles on 2 October 2026, 10:00 to 16:00 chart time. NFP hour: forecast about 56 pips, actual range 43 pips, ATR(14) about 12 pips."></canvas>
+      <div class="rp-clock" aria-hidden="true"><span class="rp-clock-day">Fri 2 Oct</span> <b class="rp-clock-time">10:00</b> <span class="rp-clock-utc">07:00 UTC</span></div>
+      <div class="rp-badge pre" aria-hidden="true">NFP in 5h 30m</div>
+      <div class="rp-card" role="status">
+        <strong>Forecast ~56 &middot; Actual ~43 &middot; ATR ~12</strong>
+        <span>Closer than ATR, not exact</span>
+      </div>
+    </div>
+    <div class="rp-controls">
+      <button type="button" class="rp-play" aria-pressed="false">Pause</button>
+      <button type="button" class="rp-replay">Replay</button>
+      <button type="button" class="rp-speed" aria-label="Playback speed">1x</button>
+      <span class="rp-progress" aria-hidden="true"><i></i></span>
+    </div>
+    <div class="rp-panel" aria-label="Indicator panel as it read at that minute">
+      <p class="pl-1">APXTT&nbsp; News Volatility Warning&nbsp;&nbsp; EURUSD</p>
+      <p class="pl-2">This hour 10:00: expect ~18.6 pips   (usual ~12.4, ATR(14) ~11.3)</p>
+      <p class="pl-3">Next hour 11:00: ~15.1 pips   (usual ~12.3)</p>
+      <p class="pl-4 red">NFP in 5h 30m - expect ~53 pips (usual hour: ~18 pips, ATR(14) says ~11)</p>
+      <p class="pl-5">   hour after: ~16 pips   (event at 2026.10.02 15:30 chart time)</p>
+      <p class="pl-s">Model FULL (factor pairs 27/27) | events: event file (ends 2026-12)</p>
+      <p class="pl-s">Clock: server = NY+7 (forced)</p>
+      <p class="pl-s">Size, not direction. Prototype. Hours after the current one use the latest data (approx.).</p>
+      <div class="pl-hist" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    </div>
+    <figcaption>
+      Real EURUSD minute data, replayed fast around the US jobs report (NFP, 15:30 chart time = 12:30 UTC). The panel
+      shows the indicator's numbers for each hour, recomputed from the same data. The bands are centred on the NFP
+      hour's open only to show their <em>width</em>: the indicator forecasts the size of the range, not its direction
+      or where it sits.
+    </figcaption>
+  </figure>
+  <div class="wrap reel">
+    <video class="reel-video" muted loop playsinline preload="none" poster="assets/nfp-reel-poster.jpg" data-src="assets/nfp-reel-720.mp4" width="720" height="1280" aria-label="Screen recording of the MT5 Strategy Tester replay with the indicator, no sound"></video>
+    <p class="fine">The same hour in MetaTrader 5: a Strategy Tester replay of the indicator on real data (screen recording, no sound).</p>
+  </div>
 </section>
 
 <section id="how" class="section section-alt">
@@ -102,5 +144,18 @@
   </div>
   <p class="wrap disclaimer">Record-keeping and risk tools, not financial advice. Trading involves risk of loss.</p>
 </footer>
+<script src="assets/nfp-replay.js" defer></script>
+<script>
+(function () {
+  var v = document.querySelector(".reel-video");
+  if (!v || !("IntersectionObserver" in window)) return;
+  var reduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) { v.setAttribute("controls", ""); v.src = v.getAttribute("data-src"); return; }
+  new IntersectionObserver(function (es) {
+    if (es[0].isIntersecting) { if (!v.getAttribute("src")) v.src = v.getAttribute("data-src"); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
+    else v.pause();
+  }, { threshold: 0.3 }).observe(v);
+})();
+</script>
 </body>
 </html>
