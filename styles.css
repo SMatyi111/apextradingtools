@@ -201,3 +201,9 @@ h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); margin: 0 0 32px; text-align: cent
   .rp-badge.now { animation: none; }
   .rp-card, .pl-hist i { transition: none; }
 }
+
+/* technical details (news-volatility.html) */
+.tech { margin: 18px 0 8px; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 16px; background: var(--panel); }
+.tech summary { cursor: pointer; font-weight: 600; color: var(--green-hi); }
+.tech[open] summary { margin-bottom: 8px; }
+.tech li { font-size: 0.92rem; }
