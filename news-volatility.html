@@ -11,7 +11,7 @@
 <meta property="og:url" content="https://smatyi111.github.io/apextradingtools/news-volatility.html">
 <meta property="og:image" content="https://smatyi111.github.io/apextradingtools/assets/newsvol-nfp.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="stylesheet" href="styles.css?v=20261017c">
+<link rel="stylesheet" href="styles.css?v=20261017d">
 </head>
 <body>
 
@@ -139,8 +139,42 @@
       <li>It forecasts the <strong>size</strong> of the move, never its direction. It is not a signal.</li>
       <li>Next hour only. It is no better than ATR for tomorrow's range, so we do not claim that.</li>
       <li>Back-tested on one broker's data; your broker's ranges may differ. Past accuracy does not guarantee future accuracy.</li>
-      <li>Prototype: there are no live or forward results yet. Not financial advice.</li>
+      <li>Prototype. The public live track record starts on 19 October 2026 (below); until it has run for a while, every number above is from back-data. Not financial advice.</li>
     </ul>
+  </div>
+</section>
+
+<section id="live" class="section">
+  <div class="wrap narrow">
+    <h2>Live track record</h2>
+    <p>Back-tests can be tuned after the fact. A live log cannot. From <strong>Monday 19 October 2026</strong>, every hour,
+      a public script commits the forecast for the next hour on 7 major pairs to GitHub <em>before the hour starts</em>,
+      next to the two free yardsticks (ATR(14) and the 20-day same-hour average). After the hour, the actual range is
+      added and scored. The rules were fixed and published in advance, and the results are published whatever they show.</p>
+    <p class="live-status" id="live-status">Loading the live scoreboard&hellip;</p>
+    <div id="live-body" hidden>
+      <div class="table-wrap">
+        <table class="compare live-table">
+          <thead><tr><th scope="col">Scored</th><th scope="col">APXTT</th><th scope="col">Same-hour average</th><th scope="col">ATR(14)</th></tr></thead>
+          <tbody id="live-stats"></tbody>
+        </table>
+      </div>
+      <p class="fine" id="live-read"></p>
+      <h3>Last 24 forecasts</h3>
+      <p><label for="live-pair">Pair</label>
+        <select id="live-pair" class="live-select"></select></p>
+      <div class="table-wrap">
+        <table class="compare live-table">
+          <thead><tr><th scope="col">Hour (UTC)</th><th scope="col">APXTT</th><th scope="col">Same-hour</th><th scope="col">ATR(14)</th><th scope="col">Actual</th></tr></thead>
+          <tbody id="live-last"></tbody>
+        </table>
+      </div>
+    </div>
+    <p class="fine">Data: Dukascopy BID prices. Error = average absolute miss of the hour's high-low range, in pips; lower is
+      better. Release hours = the hour of a scheduled release for one of the pair's two currencies.
+      <a href="https://github.com/SMatyi111/apxtt-newsvol-live" rel="noopener">Code and full log</a> &middot;
+      <a href="https://github.com/SMatyi111/apxtt-newsvol-live/blob/main/PREREGISTRATION.md" rel="noopener">The rules (preregistration)</a> &middot;
+      <a href="https://raw.githubusercontent.com/SMatyi111/apxtt-newsvol-live/main/scoreboard.json" rel="noopener">Raw scoreboard</a></p>
   </div>
 </section>
 
@@ -175,6 +209,53 @@
     if (es[0].isIntersecting) { if (!v.getAttribute("src")) v.src = v.getAttribute("data-src"); var p = v.play(); if (p && p.catch) p.catch(function () {}); }
     else v.pause();
   }, { threshold: 0.3 }).observe(v);
+})();
+</script>
+<script>
+(function () {
+  var URL = "https://raw.githubusercontent.com/SMatyi111/apxtt-newsvol-live/main/scoreboard.json";
+  var st = document.getElementById("live-status"), body = document.getElementById("live-body");
+  if (!st) return;
+  function ok(x) { return x !== null && x !== undefined && isFinite(x); }
+  function f1(x) { return ok(x) ? Number(x).toFixed(1) : "&ndash;"; }
+  function f3(x) { return ok(x) ? Number(x).toFixed(3) : "&ndash;"; }
+  function row(label, b) {
+    if (!b || !b.n) return "<tr><th scope=\"row\">" + label + "</th><td colspan=\"3\">no scored hours yet</td></tr>";
+    var best = Math.min(b.model.mae_pips, b.sh20.mae_pips, b.atr.mae_pips);
+    function cell(m) { return "<td" + (m.mae_pips === best ? " class=\"yes\"" : "") + ">" + f1(m.mae_pips) + " pips<br><span class=\"live-sub\">" + f3(m.mse_log) + "</span></td>"; }
+    return "<tr><th scope=\"row\">" + label + "<br><span class=\"live-sub\">" + b.n + " pair-hours</span></th>" + cell(b.model) + cell(b.sh20) + cell(b.atr) + "</tr>";
+  }
+  fetch(URL + "?t=" + Date.now(), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+    if (!d.hours_scored) {
+      st.innerHTML = "<strong>Starts Monday 19 October 2026</strong>, 00:00 UTC. " +
+        (d.forecast_hours ? d.forecast_hours + " forecast hours logged so far; scores appear once each hour has ended." :
+         "Warm-up: no forecasts yet. The model is frozen (coefficients SHA-256 " + String(d.coefficients_sha256 || "").slice(0, 12) + "&hellip;).");
+    } else {
+      st.innerHTML = "<strong>" + d.hours_scored + " hours scored</strong> since 19 October 2026 &middot; updated " +
+        String(d.generated_utc).replace("T", " ").replace("Z", " UTC") + (d.late_hours ? " &middot; " + d.late_hours + " late hours not scored" : "");
+    }
+    document.getElementById("live-stats").innerHTML = row("All hours", d.all_hours) + row("Release hours", d.release_hours) +
+      "<tr><td colspan=\"4\" class=\"live-sub\">Top: average error in pips (best in green). Below: squared log error, the preregistered score.</td></tr>";
+    var p = d.primary_running;
+    document.getElementById("live-read").innerHTML = p ? ("Running comparison with the best free tool (" + (p.best_free_baseline === "atr" ? "ATR(14)" : "same-hour average") +
+      "): error ratio " + f3(p.mse_ratio) + ", Diebold-Mariano t = " + (ok(p.hac_t) ? Number(p.hac_t).toFixed(2) : "&ndash;") +
+      ". Provisional until the first formal read on 14 December 2026.") : "First formal read on 14 December 2026.";
+    var sel = document.getElementById("live-pair"), pairs = d.pairs || ["EURUSD"];
+    sel.innerHTML = pairs.map(function (x) { return "<option>" + x + "</option>"; }).join("");
+    function last() {
+      var pr = sel.value, rows = (d.last_forecasts || []).map(function (r) {
+        var q = r.pairs[pr] || {};
+        return "<tr><th scope=\"row\">" + r.target_hour_utc.slice(5, 16).replace("T", " ") +
+          (r.events && r.events.length ? " <span class=\"live-ev\">" + r.events.join(" ").replace(/ev_/g, "").replace(/_post/g, "+1h") + "</span>" : "") +
+          "</th><td>" + f1(q.model) + "</td><td>" + f1(q.sh20) + "</td><td>" + f1(q.atr) + "</td><td>" + f1(q.actual) + "</td></tr>";
+      });
+      document.getElementById("live-last").innerHTML = rows.length ? rows.join("") : "<tr><td colspan=\"5\">The first forecast is for 19 Oct 00:00 UTC.</td></tr>";
+    }
+    sel.onchange = last; last();
+    body.hidden = false;
+  }).catch(function () {
+    st.innerHTML = "<strong>Starts Monday 19 October 2026.</strong> The scoreboard could not be loaded just now; the repository link below has the full log.";
+  });
 })();
 </script>
 </body>
