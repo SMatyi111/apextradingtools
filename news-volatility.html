@@ -114,6 +114,26 @@
     <p>Across 28 pairs, in the hour of a release for the pair's own currency, its range forecast missed by about a third
       as much as the best free tool and a fifth as much as ATR. ATR systematically under-calls release hours by a factor
       of 2&ndash;3. On ordinary hours the gain is small (4.35 vs 5.08 pips error on a 14-pip average hour).</p>
+    <details class="tech">
+      <summary>Technical details (for the quants)</summary>
+      <ul class="steps">
+        <li><strong>Model:</strong> HAR-type regression on log hourly realized volatility (daily / weekly / monthly lags), with a
+          continuous-vs-jump split (HAR-CJ), an intraday seasonality profile on the broker clock, a cross-pair market
+          volatility factor (27 G8 pairs), and dummies for 12 scheduled macro events.</li>
+        <li><strong>Out-of-sample R² = 0.665</strong> on log hourly realized volatility (median of 28 G8 pairs),
+          fitted 2018-06..2023-12, scored 2024-01..2026-08. Most of it comes from HAR persistence; the events matter most
+          around releases.</li>
+        <li><strong>Next-hour high-low range</strong> (median of 28 pairs, 16,151 hours each): MSE on log range 0.157
+          vs 0.204 for the best free baseline (same-hour 20-day average) and 0.242 for ATR(14); QLIKE 0.471 vs 0.666 / 0.842.</li>
+        <li><strong>Diebold-Mariano (HAC):</strong> significantly better than the best free baseline in 28/28 pairs on
+          MSE (pooled t = 25.0) and 26/28 on QLIKE, never significantly worse. A later 9-week window confirmed the ranking
+          (25/28 pairs on MSE).</li>
+        <li><strong>Release hours:</strong> MSE ratio 0.35 vs the best free baseline and 0.20 vs ATR(14).</li>
+        <li><strong>Known limits:</strong> no edge on the next-day range (ties ATR(14) D1); one broker's feed; later
+          hours in the histogram are approximations, only the current hour is measured.</li>
+      </ul>
+    </details>
+
     <h3>What it does not do</h3>
     <ul class="steps">
       <li>It forecasts the <strong>size</strong> of the move, never its direction. It is not a signal.</li>
