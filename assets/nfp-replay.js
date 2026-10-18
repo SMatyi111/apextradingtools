@@ -111,10 +111,12 @@
 
     // range projection in the NFP hour (as the indicator draws it): shaded box = range traded so far this hour,
     // dashed lines = hour low + forecast and hour high - forecast, both moving live with the hour's running high/low
-    var inNfp = hourIdx >= 5;
-    var fcP = D.panels[5].fc * 10, cN = H[cur], bx0 = xN - slot / 2 - 2, bx1 = W - axisW;
-    var projA = inNfp ? Math.min(1, (barsAt(t) - 300) / 3) : 0;
-    if (inNfp) {
+    // drawn for EVERY hour of the replay (the indicator does the same); the NFP hour additionally gets the Actual/ATR pills
+    var inNfp = hourIdx >= 5, hP = D.panels[Math.min(5, hourIdx)];
+    var fcP = hP.fc * 10, cN = H[cur], xH = xs(nCtx + hourIdx), bx0 = xH - slot / 2 - 2, bx1 = W - axisW;
+    var hourRng = (cN[1] - cN[2]) / 10, exceeded = hourRng > hP.fc;
+    var projA = Math.min(1, (barsAt(t) - hourIdx * 60) / 3);
+    if (true) {
       g.globalAlpha = projA;
       var yHi = y(cN[1]), yLo = y(cN[2]);
       g.fillStyle = "rgba(159,179,195,0.16)"; g.fillRect(bx0, yHi, bx1 - bx0, Math.max(1, yLo - yHi));
@@ -139,8 +141,8 @@
     }
 
     // projection lines + their labels (drawn over the candles, labels left of the hour like the indicator)
-    if (inNfp) {
-      var fsL = small ? 10 : 12, fcR = f0(D.panels[5].fc);
+    if (true) {
+      var fsL = small ? 10 : 12, fcR = f0(hP.fc), lineCol = exceeded ? C.orange : C.green;
       var lines = [
         { v: cN[2] + fcP, txt: small ? "low + " + fcR : "low + " + fcR + " pips: full range plays out up", up: true },
         { v: cN[1] - fcP, txt: small ? "high − " + fcR : "high − " + fcR + " pips: full range plays out down", up: false }
@@ -150,9 +152,9 @@
         var yy = y(L.v), yTop = top + 2, yBot = Hh - bottom - 2;
         if (yy >= yTop && yy <= yBot) {
           var yr = Math.round(yy) + 0.5;
-          g.save(); g.strokeStyle = C.green; g.lineWidth = 1.5; g.setLineDash([6, 4]);
+          g.save(); g.strokeStyle = lineCol; g.lineWidth = 1.5; g.setLineDash([6, 4]);
           g.beginPath(); g.moveTo(bx0, yr); g.lineTo(bx1, yr); g.stroke(); g.restore();
-          tag(L.txt, bx0 - 4, yr + (L.up ? fsL * 0.5 + 6 : -(fsL * 0.5 + 6)), C.green, fsL); // label on the inner side of each line
+          tag(L.txt, bx0 - 4, yr + (L.up ? fsL * 0.5 + 6 : -(fsL * 0.5 + 6)), lineCol, fsL); // label on the inner side of each line
         } else {
           // off the visible scale: an edge note instead of the line (the indicator does the same)
           var px2 = (D.base + L.v * D.point).toFixed(small ? 4 : 5);
@@ -200,18 +202,19 @@
       var ya = Math.max(top + fs, Math.min(yH, Hh - bottom - fs * 4));
       pill("Actual " + f0(rng) + " pips", lx, ya, "rgba(13,15,32,0.92)", C.text, C.text, fs);
       pill("ATR said ~" + f0(D.panels[5].atr), lx, ya + fs * 2 + 4, "rgba(2,25,43,0.85)", C.grey, "rgba(159,179,195,0.6)", fs - 1);
-      // "X of 56 pips used" counter, above the plot
-      if (barsAt(t) < 360) { // hidden once the summary card is up
-      var used = rng, pct = Math.round(100 * used / D.panels[5].fc);
-      var ctxt = "This hour: " + f0(used) + " of " + f0(D.panels[5].fc) + " pips used (" + pct + "%)";
-      var cfs = small ? 12 : 15, cy2 = top - (small ? 14 : 18);
-      g.font = "700 " + cfs + "px " + FONT; g.textAlign = "left"; g.textBaseline = "middle"; g.fillStyle = C.green;
-      var cw2 = g.measureText(ctxt).width, cx2 = Math.max(left + 4, Math.min(xN - cw2 / 2, W - axisW - cw2 - 4));
+      g.globalAlpha = 1;
+    }
+
+    // "X of Y pips used" counter for the current hour, above the plot (hidden once the summary card is up)
+    if (barsAt(t) < 360) {
+      var pct = Math.round(100 * hourRng / hP.fc);
+      var ctxt = "This hour: " + f0(hourRng) + " of " + f0(hP.fc) + " pips used (" + pct + "%)" + (exceeded ? ", exceeded" : "");
+      var cfs = small ? 12 : 15, cy2 = top - (small ? 14 : 18), ccol = exceeded ? C.orange : C.green;
+      g.font = "700 " + cfs + "px " + FONT; g.textAlign = "left"; g.textBaseline = "middle"; g.fillStyle = ccol;
+      var cw2 = g.measureText(ctxt).width, cx2 = Math.max(left + 4, Math.min(xH - cw2 / 2, W - axisW - cw2 - 4));
       g.fillText(ctxt, cx2, cy2);
       g.fillStyle = "rgba(159,179,195,0.25)"; g.fillRect(cx2, cy2 + cfs * 0.75, cw2, 3);
-      g.fillStyle = C.green; g.fillRect(cx2, cy2 + cfs * 0.75, cw2 * Math.min(1, used / D.panels[5].fc), 3);
-      }
-      g.globalAlpha = 1;
+      g.fillStyle = ccol; g.fillRect(cx2, cy2 + cfs * 0.75, cw2 * Math.min(1, hourRng / hP.fc), 3);
     }
 
     function pill(txt, x, yc, bg, fg, border, fs) {
