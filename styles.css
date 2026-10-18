@@ -216,3 +216,72 @@ h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); margin: 0 0 32px; text-align: cent
 .live-ev { color: #f5a623; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .live-select { font: inherit; color: var(--text); background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; margin-left: 8px; }
 @media (max-width: 560px) { .live-table th, .live-table td { padding: 8px 6px; font-size: 0.85rem; } }
+
+/* ---------------------------------------------------------------- Edge Check (edge-check.html) */
+.ec-hero { padding-bottom: 56px; }
+.ec-privacy { max-width: 680px; margin: 0 auto; text-align: left; background: var(--panel); border: 1px solid var(--green);
+  border-left: 4px solid var(--green); border-radius: 10px; padding: 14px 18px; color: var(--muted); }
+.ec-privacy strong { color: var(--text); }
+.ec-drop { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; cursor: pointer;
+  border: 2px dashed var(--line); border-radius: var(--radius); background: var(--panel); padding: 34px 16px; transition: border-color .15s, background .15s; }
+.ec-drop:hover, .ec-drop.ec-over { border-color: var(--green); background: #12304a; }
+.ec-drop input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.ec-drop:focus-within { outline: 2px solid var(--green-hi); outline-offset: 2px; }
+.ec-drop-main { font-weight: 600; color: var(--text); }
+.ec-drop-sub { font-size: 0.82rem; color: var(--muted); }
+.ec-paste-box textarea { width: 100%; font: 0.85rem/1.4 Consolas, "Courier New", monospace; color: var(--text); background: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.ec-or { margin: 22px 0 8px; }
+.ec-examples { display: flex; flex-wrap: wrap; gap: 8px; }
+.ec-ex { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--text); background: var(--panel); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.ec-ex:hover { border-color: var(--green); }
+.ec-ex[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; }
+.ec-ex:focus-visible, .ec-inline button:focus-visible { outline: 2px solid var(--green-hi); outline-offset: 2px; }
+.ec-load-msg { color: var(--text) !important; overflow-wrap: anywhere; }
+.ec-warn { color: #f5a623; font-size: 0.85rem; }
+.ec-bad { color: #ff5a4f; }
+.ec-settings { margin-top: 22px; }
+.ec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px 18px; margin: 6px 0 4px; }
+.ec-grid label { display: flex; flex-direction: column; gap: 4px; font-size: 0.86rem; color: var(--muted); }
+.ec-grid input, .ec-grid select, .ec-inline input { font: inherit; font-size: 0.92rem; color: var(--text); background: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; min-width: 0; }
+.ec-grid label.ec-check { flex-direction: row; align-items: flex-start; gap: 8px; color: var(--text); }
+.ec-grid label.ec-check input { margin-top: 4px; }
+.ec-verdict { background: var(--panel); border: 1px solid var(--line); border-left: 6px solid var(--muted); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 22px; }
+.ec-verdict p { margin: 0 0 8px; color: var(--muted); }
+.ec-verdict .ec-v-label { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.75rem; margin: 0; }
+.ec-verdict .ec-v-word { font-size: clamp(1.35rem, 4.5vw, 2rem); font-weight: 800; line-height: 1.2; color: var(--text); margin: 4px 0 10px; overflow-wrap: anywhere; }
+.ec-verdict .ec-v-reason { font-size: 0.88rem; margin: 0; }
+.ec-v-no { border-left-color: #ff5a4f; } .ec-v-no .ec-v-word { color: #ff7b72; }
+.ec-v-weak { border-left-color: #f5a623; } .ec-v-weak .ec-v-word { color: #f5a623; }
+.ec-v-check { border-left-color: #f5d123; } .ec-v-check .ec-v-word { color: #f5d123; }
+.ec-v-ok { border-left-color: var(--green-hi); } .ec-v-ok .ec-v-word { color: var(--green-hi); }
+.ec-stats th[scope="row"] { font-size: 0.9rem; }
+.ec-stats td { text-align: right; font-variant-numeric: tabular-nums; }
+.ec-stats th, .ec-stats td { padding: 9px 14px; }
+.ec-checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ec-checks li { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; overflow-wrap: anywhere; }
+.ec-tag { flex: 0 0 auto; min-width: 46px; text-align: center; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; border-radius: 6px; padding: 3px 6px; margin-top: 2px; }
+.ec-pass .ec-tag { background: rgba(34, 196, 53, 0.16); color: var(--green-hi); }
+.ec-fail .ec-tag { background: rgba(255, 90, 79, 0.16); color: #ff7b72; }
+.ec-na .ec-tag { background: rgba(159, 179, 195, 0.14); color: var(--muted); }
+.ec-canvas { width: 100%; background: var(--ink); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.ec-canvas canvas { display: block; }
+.section h3 { margin: 30px 0 10px; font-size: 1.1rem; }
+.ec-h2-sub { margin-top: 56px; }
+.ec-big { font-size: clamp(1.4rem, 4.5vw, 1.9rem); font-weight: 800; color: var(--text) !important; margin: 4px 0 8px; line-height: 1.25; }
+.ec-big-sub { font-size: 0.9rem; font-weight: 400; color: var(--muted); }
+.ec-lock { background: var(--panel); border: 1px solid var(--green); border-radius: var(--radius); padding: 20px; }
+.ec-lock-value { color: var(--text) !important; font-size: 1.1rem; font-weight: 700; margin-top: 0; }
+.ec-inline { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ec-inline label { color: var(--muted); font-size: 0.9rem; }
+.ec-inline input { flex: 1 1 200px; font-family: Consolas, "Courier New", monospace; }
+.ec-inline .btn { padding: 8px 18px; font: inherit; font-weight: 600; cursor: pointer; background: transparent; }
+code { font-family: Consolas, "Courier New", monospace; font-size: 0.88em; color: var(--text); }
+@media (max-width: 560px) {
+  .ec-stats th, .ec-stats td { padding: 8px 8px; font-size: 0.85rem; }
+  .ec-verdict { padding: 14px 14px; }
+  .ec-lock { padding: 14px; }
+}
+.ec-privacy-small { display: block; margin-top: 8px; font-size: 0.82rem; }

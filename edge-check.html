@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Edge Check: is your trading edge real, or luck? (free, runs in your browser) | APXTT</title>
+<meta name="description" content="Drop your MT5/MT4 trade history or a CSV. Edge Check tests whether your results stand out from luck, checks stability and costs, and simulates how many trades you need. Runs in your browser; nothing is uploaded.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Is your edge real, or luck?">
+<meta property="og:description" content="Free statistics check for your trade history. Runs in your browser; nothing is uploaded.">
+<meta property="og:url" content="https://smatyi111.github.io/apextradingtools/edge-check.html">
+<link rel="stylesheet" href="styles.css?v=20261018a">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="APXTT home">
+      <svg class="brand-mark" viewBox="0 0 64 40" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="4" y="8" width="7" height="14" rx="1.5"/><rect x="7" y="4" width="1.2" height="22"/>
+          <rect x="16" y="15" width="7" height="8" rx="1.5"/><rect x="19" y="12" width="1.2" height="14"/>
+          <rect x="28" y="19" width="7" height="13" rx="1.5"/><rect x="31" y="16" width="1.2" height="20"/>
+          <rect x="40" y="11" width="7" height="13" rx="1.5"/><rect x="43" y="8" width="1.2" height="19"/>
+          <rect x="52" y="3" width="7" height="22" rx="1.5"/><rect x="55" y="0" width="1.2" height="28"/>
+        </g>
+      </svg>
+      <span class="brand-text">APXTT</span>
+    </a>
+    <nav>
+      <a href="#check">Check</a>
+      <a href="#read">How to read it</a>
+      <a href="#formats">File formats</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero ec-hero">
+  <div class="wrap hero-inner">
+    <p class="eyebrow">Free tool &middot; runs in your browser</p>
+    <h1>Is your edge real,<br>or luck?</h1>
+    <p class="lead">Drop in your trade history. <strong>Edge Check</strong> tests whether your results stand out from luck after
+      costs, checks whether they hold up across time, and simulates how many trades you would need before they mean something.</p>
+    <div class="ec-privacy" role="note">
+      <strong>Your trades never leave your computer.</strong> This page reads the file inside your browser. Nothing is
+      uploaded, nothing is stored on a server, and there is no analytics or tracking on this page. You can disconnect from
+      the internet after the page has loaded and it still works.
+      <span class="ec-privacy-small">Two small exceptions, both optional or local: if you enter a paid report key, that key alone is
+      sent to Gumroad to check it; and this browser remembers how many full reports you have used (stored only on your device).</span>
+    </div>
+    <p class="fine">A statistics tool, not financial advice &middot; past results do not guarantee future results</p>
+  </div>
+</section>
+
+<section id="check" class="section">
+  <div class="wrap narrow">
+    <h2>1. Load your trades</h2>
+    <label id="ec-drop" class="ec-drop" for="ec-file">
+      <input id="ec-file" type="file" accept=".csv,.txt,.htm,.html,.xlsx,text/csv,text/html">
+      <span class="ec-drop-main">Drop a file here, or tap to choose one</span>
+      <span class="ec-drop-sub">CSV &middot; APXTT MT5 export &middot; MT5 history report (.xlsx or .html) &middot; MT5 tester report &middot; MT4 statement (beta)</span>
+    </label>
+    <details class="tech ec-paste-box">
+      <summary>Or paste rows</summary>
+      <p class="fine">Header row with at least a result column, for example <code>date,symbol,result,cost</code>. One trade per line.</p>
+      <textarea id="ec-paste" rows="6" spellcheck="false" placeholder="date,symbol,result,cost&#10;2025-03-04 10:15,EURUSD,1.8,0.05&#10;2025-03-05 14:02,GBPUSD,-1,0.05"></textarea>
+      <p><button type="button" id="ec-paste-go" class="btn btn-ghost">Check pasted rows</button></p>
+    </details>
+    <p class="ec-or">Or try an example:</p>
+    <div id="ec-examples" class="ec-examples"></div>
+    <p id="ec-ex-blurb" class="fine"></p>
+    <p id="ec-load-msg" class="ec-load-msg" role="status"></p>
+
+    <details class="tech ec-settings" open>
+      <summary>Settings</summary>
+      <div class="ec-grid">
+        <label>Results are in
+          <select id="ec-unit"><option value="R">R (multiples of risk)</option><option value="money">account currency</option><option value="pips">pips</option></select></label>
+        <label class="ec-check"><input type="checkbox" id="ec-incl"> My results already include all costs (spread, commission, swap)</label>
+        <label>Cost per trade if the file has none
+          <input id="ec-defcost" type="number" step="any" value="0"></label>
+        <label>Strategies or variants you tried (N)
+          <input id="ec-ntried" type="number" min="1" step="1" value="1"></label>
+        <label>Significance level
+          <select id="ec-alpha"><option value="0.05">5% (usual)</option><option value="0.01">1% (strict)</option><option value="0.1">10% (loose)</option></select></label>
+        <label>Out-of-sample from (optional)
+          <input id="ec-oos" type="date"></label>
+        <label>Simulation model
+          <select id="ec-model"><option value="empirical">Resample my own trades</option><option value="normal">Normal (average and spread)</option><option value="winloss">Fixed win / loss sizes</option></select></label>
+        <label>Risk per trade (% of account)
+          <input id="ec-risk" type="number" min="0.05" max="10" step="0.05" value="1"></label>
+        <label>Random seed
+          <input id="ec-seed" type="number" min="0" step="1" value="20261018"></label>
+      </div>
+      <p class="fine">A significant result can still come from data-mining if you tried many strategies (set N tried).
+        Testing 20 variants and keeping the best is like buying 20 lottery tickets: one will often look good by luck.</p>
+    </details>
+  </div>
+</section>
+
+<section id="ec-results" class="section section-alt" hidden>
+  <div class="wrap narrow">
+    <h2>2. The result</h2>
+    <div id="ec-verdict" class="ec-verdict" aria-live="polite"></div>
+    <div class="table-wrap"><table class="compare ec-stats"><tbody id="ec-stats"></tbody></table></div>
+
+    <h3>Checks</h3>
+    <ul id="ec-checks" class="ec-checks"></ul>
+
+    <h3>Luck band: your trades vs the same trades with no edge</h3>
+    <div class="ec-canvas"><canvas id="ec-band" role="img" aria-label="Your cumulative result compared with random-sign versions of the same trades"></canvas></div>
+    <p id="ec-band-note" class="fine"></p>
+    <p id="ec-seed-out" class="fine"></p>
+
+    <h2 class="ec-h2-sub">3. What it would take</h2>
+    <div id="ec-lock" class="ec-lock" hidden></div>
+    <div id="ec-full" hidden>
+      <p id="ec-quota" class="fine"></p>
+      <h3>How many trades you need</h3>
+      <div id="ec-fwd"></div>
+      <h3>Edge or no edge, don't get blown up</h3>
+      <p class="fine">Manage your risk based on real structure: the same simulated futures, now as an account balance.</p>
+      <div id="ec-risk-out"></div>
+    </div>
+  </div>
+</section>
+
+<section id="read" class="section">
+  <div class="wrap narrow">
+    <h2>How to read this</h2>
+    <ul class="steps">
+      <li><strong>The question it answers:</strong> "Could results like mine come from a strategy with no edge, just luck?" It looks at your
+        average result per trade after costs, how much the results vary, and how many trades there are.</li>
+      <li><strong>The verdict</strong> is the weakest reading that applies, checked in this order: average zero or negative &rarr; NO EVIDENCE;
+        fewer than 30 trades &rarr; WEAK; p of 0.25 or more &rarr; NO EVIDENCE; not significant after the correction for strategies tried &rarr; WEAK;
+        any failed check &rarr; LOOKS SIGNIFICANT - CHECK STABILITY &amp; COSTS; otherwise SIGNIFICANT AND STABLE.</li>
+      <li><strong>p</strong> is the chance that a strategy with zero edge would show an average at least this good. Small p means "unusual for luck", not "proven".</li>
+      <li><strong>Strategies tried (N):</strong> if you tested many systems, settings or pairs and kept the best, the best one looks good by chance.
+        The tool multiplies p by N (Bonferroni). Be honest with N; it is the setting that changes the verdict most often.</li>
+      <li><strong>The checks</strong> ask whether the result depends on one half of the record, one year, five trades, low costs, or the period you designed it on.
+        "n/a" means there is not enough data for that check; it does not count as a pass for your confidence, only for the verdict rule.</li>
+      <li><strong>The luck band</strong> keeps your exact trade sizes but flips each trade's sign at random. If your real curve stays inside the grey band, luck explains it.</li>
+      <li><strong>The bootstrap range</strong> resamples your own trades: it shows how much the average itself could move with a different draw of the same kind of trades.</li>
+      <li><strong>How many trades you need</strong> assumes your measured average is the true edge and simulates many futures. Measured edges are usually
+        too high (the best-looking strategy is the one you keep), so treat the number as a minimum.</li>
+      <li><strong>Drawdown and risk per trade</strong> use the same simulated futures with fixed-fractional sizing. The zero-edge line matters even with a real
+        edge: it is what sizing alone does to an account.</li>
+    </ul>
+    <h3>What this tool does not check</h3>
+    <ul class="steps">
+      <li>Whether your backtest used future data (lookahead, repainting indicators, unfinished higher-timeframe bars).</li>
+      <li>Whether trades overlap or several pairs trade the same move; that makes results look more certain than they are.</li>
+      <li>Whether your live trading matches your backtest, or whether your journal left out trades.</li>
+      <li>Whether the broker's prices and costs in the file are the ones you will get.</li>
+    </ul>
+    <p class="fine">A statistics tool, not financial advice. Past results do not guarantee future results. A significant result can still come from data-mining
+      if you tried many strategies (set N tried). Nothing here says anything about your future profits.</p>
+  </div>
+</section>
+
+<section id="formats" class="section section-alt">
+  <div class="wrap narrow">
+    <h2>File formats</h2>
+    <ul class="steps">
+      <li><strong>CSV</strong> (comma, semicolon or tab): a header row with <code>result</code> (or R, profit, pnl, pips), and ideally <code>date</code>, <code>symbol</code> and
+        <code>cost</code> (cost per trade as a positive number). Dates like 2025-03-04 14:30 or 2025.03.04 work best.</li>
+      <li><strong>APXTT MT5 export script</strong>: a free MetaTrader 5 script that writes your closed trades, with commission, swap and fees, to a CSV this page reads.
+        It does not trade and does not connect to the internet. <span class="live-sub">(Download link coming.)</span></li>
+      <li><strong>MT5 history report</strong>: in MetaTrader 5, History tab &rarr; right-click &rarr; Report &rarr; Open XML (.xlsx) or HTML. The Positions table is used;
+        result = profit, cost = commission + swap. The .xlsx version was tested on a real report; the HTML version is read the same way but was not tested on a real HTML export.</li>
+      <li><strong>MT5 Strategy Tester report</strong> (HTML): the Deals table is used, one trade per closing deal.</li>
+      <li><strong>MT4 Detailed Statement</strong> (HTML): beta, not yet tested on a real statement. Always compare the trade count and total with your statement.</li>
+    </ul>
+    <p class="fine">Reports in languages other than English are not recognised yet; use the export script or a CSV.</p>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <span>&copy; 2026 Apex Trading Tools &middot; Pattern Traders</span>
+    <span class="social">
+      <a href="https://www.instagram.com/apextradingtools/" rel="noopener">Instagram</a>
+      <a href="https://www.youtube.com/@ApexTradingTools" rel="noopener">YouTube</a>
+    </span>
+  </div>
+  <p class="wrap disclaimer">A statistics tool, not financial advice. Past results do not guarantee future results. Trading involves risk of loss.</p>
+</footer>
+<script src="js/edge-check-examples.js?v=20261018a"></script>
+<script src="js/edge-check.js?v=20261018a"></script>
+</body>
+</html>
