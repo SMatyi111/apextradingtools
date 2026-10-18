@@ -49,9 +49,10 @@
     var lo = 1e9, hi = -1e9;
     d.ctx.forEach(function (c) { lo = Math.min(lo, c[3]); hi = Math.max(hi, c[2]); });
     d.m1.forEach(function (b) { lo = Math.min(lo, b[2]); hi = Math.max(hi, b[1]); });
-    // keep the NFP hour's final projection lines (hour low + forecast, hour high - forecast) on the scale
-    var fcP = d.panels[5].fc * 10;
-    lo = Math.min(lo, d.nfpHour.high - fcP); hi = Math.max(hi, d.nfpHour.low + fcP);
+    // keep only the NFP hour's expected-range BAND on the scale (mid +- forecast/2), not the faint extreme lines:
+    // fitting the extremes squashed the candles; extremes that fall off the scale get an edge note instead
+    var fcP = d.panels[5].fc * 10, midN = (d.nfpHour.high + d.nfpHour.low) / 2;
+    lo = Math.min(lo, midN - fcP / 2); hi = Math.max(hi, midN + fcP / 2);
     var padv = (hi - lo) * 0.07;
     D.lo = lo - padv; D.hi = hi + padv * 0.6;
   }
@@ -79,6 +80,15 @@
     var plotW = W - axisW - left, plotH = Hh - top - bottom;
     var LZ = Math.max(small ? 112 : 150, plotW * 0.24);
     var slot = (plotW - LZ) / nC, cw = Math.max(3, Math.round(slot * 0.62));
+    // autoscale like MT5: fit the visible candles + the current hour's expected-range band (eased, so no jumps)
+    var tlo = 1e9, thi = -1e9, hc0 = H[cur], fc0 = D.panels[Math.min(5, hourIdx)].fc * 10, mid0 = (hc0[1] + hc0[2]) / 2;
+    ctxBars.forEach(function (c) { tlo = Math.min(tlo, c[3]); thi = Math.max(thi, c[2]); }); // ctx bar = [time, o, h, l, c]
+    for (var q = 0; q <= cur; q++) { tlo = Math.min(tlo, D.m1[q][2]); thi = Math.max(thi, D.m1[q][1]); }
+    tlo = Math.min(tlo, mid0 - fc0 / 2); thi = Math.max(thi, mid0 + fc0 / 2);
+    var tp = (thi - tlo) * 0.08; tlo -= tp; thi += tp * 0.7;
+    if (D.slo === undefined || !playing) { D.slo = tlo; D.shi = thi; }
+    else { D.slo += (tlo - D.slo) * 0.12; D.shi += (thi - D.shi) * 0.12; }
+    D.lo = D.slo; D.hi = D.shi;
     var y = function (p) { return top + plotH * (D.hi - p) / (D.hi - D.lo); };
     var xs = function (i) { return left + slot * (i + 0.5); };
     var g = ctx;
