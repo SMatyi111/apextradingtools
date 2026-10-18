@@ -9,7 +9,7 @@
 <meta property="og:title" content="Is your edge real, or luck?">
 <meta property="og:description" content="Free statistics check for your trade history. Runs in your browser; nothing is uploaded.">
 <meta property="og:url" content="https://smatyi111.github.io/apextradingtools/edge-check.html">
-<link rel="stylesheet" href="styles.css?v=20261018a">
+<link rel="stylesheet" href="styles.css?v=20261018b">
 </head>
 <body>
 
@@ -108,8 +108,8 @@
     <h3>Checks</h3>
     <ul id="ec-checks" class="ec-checks"></ul>
 
-    <h3>Luck band: your trades vs the same trades with no edge</h3>
-    <div class="ec-canvas"><canvas id="ec-band" role="img" aria-label="Your cumulative result compared with random-sign versions of the same trades"></canvas></div>
+    <h3>Luck band: your trades vs the same trades with no skill, costs paid</h3>
+    <div class="ec-canvas"><canvas id="ec-band" role="img" aria-label="Your cumulative result after costs compared with random-direction versions of the same trades that still pay your costs"></canvas></div>
     <p id="ec-band-note" class="fine"></p>
     <p id="ec-seed-out" class="fine"></p>
 
@@ -135,17 +135,23 @@
       <li><strong>The verdict</strong> is the weakest reading that applies, checked in this order: average zero or negative &rarr; NO EVIDENCE;
         fewer than 30 trades &rarr; WEAK; p of 0.25 or more &rarr; NO EVIDENCE; not significant after the correction for strategies tried &rarr; WEAK;
         any failed check &rarr; LOOKS SIGNIFICANT - CHECK STABILITY &amp; COSTS; otherwise SIGNIFICANT AND STABLE.</li>
-      <li><strong>p</strong> is the chance that a strategy with zero edge would show an average at least this good. Small p means "unusual for luck", not "proven".</li>
+      <li><strong>p</strong> is the chance of a net average (after costs) at least this good if the true net average were zero. Small p means "unusual for luck", not "proven".
+        The random-sign check tests the same question a second way: it flips the sign of each net result at random.</li>
       <li><strong>Strategies tried (N):</strong> if you tested many systems, settings or pairs and kept the best, the best one looks good by chance.
         The tool multiplies p by N (Bonferroni). Be honest with N; it is the setting that changes the verdict most often.</li>
       <li><strong>The checks</strong> ask whether the result depends on one half of the record, one year, five trades, low costs, or the period you designed it on.
         "n/a" means there is not enough data for that check; it does not count as a pass for your confidence, only for the verdict rule.</li>
-      <li><strong>The luck band</strong> keeps your exact trade sizes but flips each trade's sign at random. If your real curve stays inside the grey band, luck explains it.</li>
+      <li><strong>The luck band: random direction, real costs.</strong> A trader with no skill still pays the spread, commission and swap, so having no edge
+        is not breakeven: it loses about your average cost on every trade. The band keeps your exact trade sizes before costs, picks each trade's direction at
+        random, and still takes your costs off, so it drifts down by your costs. If your real curve stays inside the grey band, a trader with no skill paying
+        your costs could have done the same. The line under the statistics gives that trader's average and how often one reached your net average.
+        If no costs are known, this no-skill world breaks even, which is optimistic, and the page says so.</li>
       <li><strong>The bootstrap range</strong> resamples your own trades: it shows how much the average itself could move with a different draw of the same kind of trades.</li>
       <li><strong>How many trades you need</strong> assumes your measured average is the true edge and simulates many futures. Measured edges are usually
         too high (the best-looking strategy is the one you keep), so treat the number as a minimum.</li>
-      <li><strong>Drawdown and risk per trade</strong> use the same simulated futures with fixed-fractional sizing. The zero-edge line matters even with a real
-        edge: it is what sizing alone does to an account.</li>
+      <li><strong>Drawdown and risk per trade</strong> use the same simulated futures with fixed-fractional sizing. "No edge" there also means random direction,
+        real costs: zero edge before costs, your average cost still paid, so the account drifts down. That line matters even with a real
+        edge: it is what sizing and costs alone do to an account.</li>
     </ul>
     <h3>What this tool does not check</h3>
     <ul class="steps">
@@ -155,7 +161,8 @@
       <li>Whether the broker's prices and costs in the file are the ones you will get.</li>
     </ul>
     <p class="fine">A statistics tool, not financial advice. Past results do not guarantee future results. A significant result can still come from data-mining
-      if you tried many strategies (set N tried). Nothing here says anything about your future profits.</p>
+      if you tried many strategies (set N tried). Nothing here says anything about your future profits. The no-skill world assumes random direction with your
+      real costs: the costs in your file (a cost entered as a credit, such as positive swap, is counted as zero there), or the cost per trade you set.</p>
   </div>
 </section>
 
@@ -193,6 +200,6 @@
   <p class="wrap disclaimer">A statistics tool, not financial advice. Past results do not guarantee future results. Trading involves risk of loss.</p>
 </footer>
 <script src="js/edge-check-examples.js?v=20261018a"></script>
-<script src="js/edge-check.js?v=20261018a"></script>
+<script src="js/edge-check.js?v=20261018b"></script>
 </body>
 </html>

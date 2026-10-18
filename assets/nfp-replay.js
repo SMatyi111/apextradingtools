@@ -17,7 +17,7 @@
   var el = function (s) { return root.querySelector(s); };
   var clockEl = el(".rp-clock-time"), utcEl = el(".rp-clock-utc"), badge = el(".rp-badge"), card = el(".rp-card");
   var btnPlay = el(".rp-play"), btnReplay = el(".rp-replay"), btnSpeed = el(".rp-speed"), bar = el(".rp-progress i");
-  var pl = { l2: el(".pl-2"), l3: el(".pl-3"), l4: el(".pl-4"), l5: el(".pl-5"), hist: el(".pl-hist"), panel: el(".rp-panel") };
+  var pl = { lu: el(".pl-u"), l2: el(".pl-2"), l3: el(".pl-3"), l4: el(".pl-4"), l5: el(".pl-5"), hist: el(".pl-hist"), panel: el(".rp-panel") };
 
   var D, H = [], W = 0, Hh = 0, dpr = 1;
   var t = 0, playing = false, userPaused = false, visible = false, speed = 1, last = 0, reduced = false;
@@ -49,8 +49,9 @@
     var lo = 1e9, hi = -1e9;
     d.ctx.forEach(function (c) { lo = Math.min(lo, c[3]); hi = Math.max(hi, c[2]); });
     d.m1.forEach(function (b) { lo = Math.min(lo, b[2]); hi = Math.max(hi, b[1]); });
-    var o = d.nfpHour.open, half = d.panels[5].fc * 10 / 2;
-    lo = Math.min(lo, o - half); hi = Math.max(hi, o + half);
+    // keep the NFP hour's final projection lines (hour low + forecast, hour high - forecast) on the scale
+    var fcP = d.panels[5].fc * 10;
+    lo = Math.min(lo, d.nfpHour.high - fcP); hi = Math.max(hi, d.nfpHour.low + fcP);
     var padv = (hi - lo) * 0.07;
     D.lo = lo - padv; D.hi = hi + padv * 0.6;
   }
@@ -108,25 +109,19 @@
     g.fillStyle = C.orange; g.font = "700 " + (small ? "10px " : "11px ") + FONT; g.textAlign = "right"; g.textBaseline = "alphabetic";
     if (hourIdx < 5) g.fillText("NFP 15:30", xN - 4, Hh - bottom - 6);
 
-    // bands from the NFP-hour open, after 15:00
+    // range projection in the NFP hour (as the indicator draws it): shaded box = range traded so far this hour,
+    // dashed lines = hour low + forecast and hour high - forecast, both moving live with the hour's running high/low
     var inNfp = hourIdx >= 5;
+    var fcP = D.panels[5].fc * 10, cN = H[cur], bx0 = xN - slot / 2 - 2, bx1 = W - axisW;
+    var projA = inNfp ? Math.min(1, (barsAt(t) - 300) / 3) : 0;
     if (inNfp) {
-      var a = Math.min(1, (barsAt(t) - 300) / 6);
-      var o = D.nfpHour.open, fcH = D.panels[5].fc * 10 / 2, atrH = D.panels[5].atr * 10 / 2;
-      var bx0 = xN - slot / 2 - 2, bx1 = W - axisW;
-      g.globalAlpha = a;
-      // forecast band
-      g.fillStyle = "rgba(34,196,53,0.13)"; g.fillRect(bx0, y(o + fcH), bx1 - bx0, y(o - fcH) - y(o + fcH));
-      g.strokeStyle = C.green; g.lineWidth = 1.5; g.setLineDash([6, 4]);
-      [o + fcH, o - fcH].forEach(function (v) { var yy = Math.round(y(v)) + 0.5; g.beginPath(); g.moveTo(bx0, yy); g.lineTo(bx1, yy); g.stroke(); });
-      // ATR band
-      g.setLineDash([]);
-      g.fillStyle = "rgba(159,179,195,0.20)"; g.fillRect(bx0, y(o + atrH), bx1 - bx0, y(o - atrH) - y(o + atrH));
-      g.strokeStyle = "rgba(159,179,195,0.75)"; g.lineWidth = 1;
-      [o + atrH, o - atrH].forEach(function (v) { var yy = Math.round(y(v)) + 0.5; g.beginPath(); g.moveTo(bx0, yy); g.lineTo(bx1, yy); g.stroke(); });
+      g.globalAlpha = projA;
+      var yHi = y(cN[1]), yLo = y(cN[2]);
+      g.fillStyle = "rgba(159,179,195,0.16)"; g.fillRect(bx0, yHi, bx1 - bx0, Math.max(1, yLo - yHi));
+      g.strokeStyle = "rgba(159,179,195,0.55)"; g.lineWidth = 1;
+      [yHi, yLo].forEach(function (yy) { yy = Math.round(yy) + 0.5; g.beginPath(); g.moveTo(bx0, yy); g.lineTo(bx1, yy); g.stroke(); });
       g.globalAlpha = 1;
     }
-
     // candles
     function candle(i, c, live) {
       var x = Math.round(xs(i)), up = c[3] >= c[0];
@@ -141,6 +136,37 @@
     for (var hI = 0; hI <= hourIdx; hI++) {
       var lastBar = hI < hourIdx ? hI * 60 + 59 : cur;
       candle(nCtx + hI, H[lastBar], hI === hourIdx && n < 360);
+    }
+
+    // projection lines + their labels (drawn over the candles, labels left of the hour like the indicator)
+    if (inNfp) {
+      var fsL = small ? 10 : 12, fcR = f0(D.panels[5].fc);
+      var lines = [
+        { v: cN[2] + fcP, txt: small ? "low + " + fcR : "low + " + fcR + " pips: full range plays out up", up: true },
+        { v: cN[1] - fcP, txt: small ? "high − " + fcR : "high − " + fcR + " pips: full range plays out down", up: false }
+      ];
+      g.globalAlpha = projA;
+      lines.forEach(function (L) {
+        var yy = y(L.v), yTop = top + 2, yBot = Hh - bottom - 2;
+        if (yy >= yTop && yy <= yBot) {
+          var yr = Math.round(yy) + 0.5;
+          g.save(); g.strokeStyle = C.green; g.lineWidth = 1.5; g.setLineDash([6, 4]);
+          g.beginPath(); g.moveTo(bx0, yr); g.lineTo(bx1, yr); g.stroke(); g.restore();
+          tag(L.txt, bx0 - 4, yr + (L.up ? fsL * 0.5 + 6 : -(fsL * 0.5 + 6)), C.green, fsL); // label on the inner side of each line
+        } else {
+          // off the visible scale: an edge note instead of the line (the indicator does the same)
+          var px2 = (D.base + L.v * D.point).toFixed(small ? 4 : 5);
+          tag((L.up ? "▲ " : "▼ ") + (small ? L.txt.split(":")[0] : L.txt.split(":")[0] + " = " + px2 + " (off the chart)"),
+            bx0 - 4, L.up ? yTop + fsL * 0.5 + 6 : yBot - fsL * 0.5 - 6, "rgba(34,196,53,0.85)", fsL);
+        }
+      });
+      g.globalAlpha = 1;
+    }
+    function tag(txt, xr, yc, fg, fs) { // right-aligned pill ending at xr
+      g.font = "600 " + fs + "px " + FONT;
+      var w = g.measureText(txt).width + 10, h = fs + 7, x = Math.max(left + 2, xr - w);
+      g.fillStyle = "rgba(2,25,43,0.88)"; rr(x, yc - h / 2, w, h, 4); g.fill();
+      g.fillStyle = fg; g.textAlign = "left"; g.textBaseline = "middle"; g.fillText(txt, x + 5, yc + 0.5);
     }
 
     // NFP flash
@@ -169,19 +195,22 @@
       g.beginPath(); g.moveTo(bxx - 4, yH); g.lineTo(bxx, yH); g.lineTo(bxx, yL); g.lineTo(bxx - 4, yL); g.stroke();
       var lx = bxx + 7, fs = small ? 11 : 13;
       g.font = "700 " + fs + "px " + FONT; g.textBaseline = "middle"; g.textAlign = "left";
-      var o2 = D.nfpHour.open, fcH2 = D.panels[5].fc * 10 / 2, atrH2 = D.panels[5].atr * 10 / 2;
-      g.globalAlpha = Math.min(1, (barsAt(t) - 300) / 6);
-      var la = "APXTT ~" + f0(D.panels[5].fc) + " pips";
-      pill(la, lx, y(o2 - fcH2) + fs + 2, "rgba(2,25,43,0.85)", C.green, C.green, fs);
+      g.globalAlpha = projA;
       // actual: pill at the hour's high, kept inside the plot
-      var ya = Math.max(top + fs, Math.min(yH, Hh - bottom - fs));
+      var ya = Math.max(top + fs, Math.min(yH, Hh - bottom - fs * 4));
       pill("Actual " + f0(rng) + " pips", lx, ya, "rgba(13,15,32,0.92)", C.text, C.text, fs);
-      // ATR label beside its band, moved below the band if it would touch the actual pill
-      var yatr = y(o2);
-      if (Math.abs(yatr - ya) < fs * 2) yatr = y(o2 - atrH2) + fs + 1;
-      if (Math.abs(yatr - ya) < fs * 2) yatr = ya + fs * 2 + 2;
-      g.font = "600 " + (fs - 1) + "px " + FONT;
-      pill("ATR ~" + f0(D.panels[5].atr), lx, yatr, "rgba(2,25,43,0.85)", C.grey, "rgba(159,179,195,0.6)", fs - 1);
+      pill("ATR said ~" + f0(D.panels[5].atr), lx, ya + fs * 2 + 4, "rgba(2,25,43,0.85)", C.grey, "rgba(159,179,195,0.6)", fs - 1);
+      // "X of 56 pips used" counter, above the plot
+      if (barsAt(t) < 360) { // hidden once the summary card is up
+      var used = rng, pct = Math.round(100 * used / D.panels[5].fc);
+      var ctxt = "This hour: " + f0(used) + " of " + f0(D.panels[5].fc) + " pips used (" + pct + "%)";
+      var cfs = small ? 12 : 15, cy2 = top - (small ? 14 : 18);
+      g.font = "700 " + cfs + "px " + FONT; g.textAlign = "left"; g.textBaseline = "middle"; g.fillStyle = C.green;
+      var cw2 = g.measureText(ctxt).width, cx2 = Math.max(left + 4, Math.min(xN - cw2 / 2, W - axisW - cw2 - 4));
+      g.fillText(ctxt, cx2, cy2);
+      g.fillStyle = "rgba(159,179,195,0.25)"; g.fillRect(cx2, cy2 + cfs * 0.75, cw2, 3);
+      g.fillStyle = C.green; g.fillRect(cx2, cy2 + cfs * 0.75, cw2 * Math.min(1, used / D.panels[5].fc), 3);
+      }
       g.globalAlpha = 1;
     }
 
@@ -211,16 +240,19 @@
     else if (dt > -5) { bt = "NFP NOW"; cls = "now"; }
     else { bt = "NFP +" + (-dt) + " min"; cls = "post"; }
     if (bt !== lastBadge) { badge.textContent = bt; badge.className = "rp-badge " + cls; lastBadge = bt; }
-    renderPanel(D.panels[Math.min(5, hourIdx)], dt);
+    var hc = H[cur];
+    renderPanel(D.panels[Math.min(5, hourIdx)], dt, (hc[1] - hc[2]) / 10);
     var done = barsAt(t) >= 360;
     card.classList.toggle("show", done); root.classList.toggle("rp-done", done);
     bar.style.transform = "scaleX(" + Math.min(1, t / END).toFixed(4) + ")";
   }
 
-  function panelText(P, dt) {
+  function panelText(P, dt, used) {
     var when = dt >= 0 ? "in " + mins(dt) : "released " + mins(-dt) + " ago";
     var nextH = pad(parseInt(P.t, 10) + 1) + ":00";
+    var pct = Math.round(100 * used / P.fc);
     return {
+      lu: "This hour: " + f0(used) + " of " + f0(P.fc) + " pips used (" + pct + "%)" + (used > P.fc ? ", range exceeded" : ""),
       l2: "This hour " + P.t + ": expect ~" + f1(P.fc) + " pips   (usual ~" + f1(P.usual) + ", ATR(14) ~" + f1(P.atr) + ")",
       l3: "Next hour " + nextH + ": ~" + f1(P.nextFc) + " pips   (usual ~" + f1(P.nextUsual) + ")",
       l4: "NFP " + when + " - expect ~" + f0(P.xe) + " pips (usual hour: ~" + f0(P.ue) + " pips, ATR(14) says ~" + f0(P.atr) + ")",
@@ -228,10 +260,11 @@
       red: P.ue > 0 && P.xe >= 2 * P.ue
     };
   }
-  function renderPanel(P, dt) {
-    var key = P.t + "|" + dt;
+  function renderPanel(P, dt, used) {
+    var key = P.t + "|" + dt + "|" + f0(used);
     if (key === lastPanelKey) return;
-    var T = panelText(P, dt);
+    var T = panelText(P, dt, used);
+    if (pl.lu) pl.lu.textContent = T.lu;
     pl.l2.textContent = T.l2; pl.l3.textContent = T.l3; pl.l4.textContent = T.l4; pl.l5.textContent = T.l5;
     pl.l4.className = "pl-4 " + (T.red ? "red" : "amber");
     if (lastPanelKey.split("|")[0] !== P.t) {
@@ -250,9 +283,9 @@
     if (!D) return;
     pl.panel.style.minHeight = "";
     lastPanelKey = "";
-    renderPanel(D.panels[0], 330); // longest strings ("in 5h 30m")
+    renderPanel(D.panels[0], 330, 99); // longest strings ("in 5h 30m")
     var h = pl.panel.getBoundingClientRect().height;
-    renderPanel(D.panels[5], -30);
+    renderPanel(D.panels[5], -30, 99);
     h = Math.max(h, pl.panel.getBoundingClientRect().height);
     pl.panel.style.minHeight = Math.ceil(h) + "px";
     lastPanelKey = "";

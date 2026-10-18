@@ -157,9 +157,15 @@
     var R = { opts: o, n: n, trades: tr, net: net, gross: gross, cost: cost, allDated: allDated };
     if (!n) { R.verdict = EC.VERDICTS.NO_DATA; R.reason = "no_data"; R.checks = []; return R; }
 
+    // Cost convention (all parsers): cost > 0 is a charge (CSV "positive number"; MT4/MT5/journal: cost = -(commission
+    // + swap + fee), and those are negative when charged). A negative cost is a credit (e.g. positive swap). The no-skill
+    // world below pays adv[i] = max(cost, 0): a credit is not given to a trader with no skill (swap credit depends on
+    // the direction held), so the no-skill drift is never better than breakeven.
+    var adv = new Array(n);
+    for (i = 0; i < n; i++) adv[i] = cost[i] > 0 ? cost[i] : 0;
     var st = {};
     st.n = n; st.sum = sum(net); st.mean = st.sum / n; st.sd = sdOf(net);
-    st.meanGross = sum(gross) / n; st.meanCost = sum(cost) / n;
+    st.meanGross = sum(gross) / n; st.meanCost = sum(cost) / n; st.meanAdvCost = sum(adv) / n;
     var sn = sorted(net); st.median = quant(sn, 0.5);
     var wins = net.filter(function (x) { return x > 0; }), losses = net.filter(function (x) { return x < 0; });
     st.nWin = wins.length; st.nLoss = losses.length;
@@ -173,17 +179,25 @@
     } else { st.se = null; st.t = null; st.df = n - 1; st.p = null; st.pBonf = null; }
     R.stats = st;
 
-    // random-sign null (stream 1): sign of trade i in sim s = top bit of draw s*n+i
+    // Two uses of the same random signs (stream 1): sign of trade i in sim s = top bit of draw s*n+i.
+    // (1) Significance test of "net mean > 0": flip the sign of each NET result (a valid permutation test of a
+    //     symmetric null centred on zero). This drives the "randsign" check and the verdict; unchanged.
+    // (2) No-skill world ("random direction, real costs"): each trade's direction is random, so the GROSS result gets
+    //     the random sign, and the trader still pays the cost: path = sign * gross - adv. Expected drift = -meanAdvCost.
+    //     This drives the luck band and the informational "no-skill trader" line; it never changes the verdict.
     var S1 = new Stream(o.seed, 1), NS = EC.NULL_SIMS, BS = EC.BAND_SIMS;
-    var tol = 1e-12 * Math.max(1, Math.abs(st.mean)), ge = 0, band = new Float64Array(BS * n), simMeans = new Float64Array(NS);
+    var tol = 1e-12 * Math.max(1, Math.abs(st.mean)), ge = 0, geA = 0, band = new Float64Array(BS * n), simMeans = new Float64Array(NS);
     for (var s = 0; s < NS; s++) {
-      var cum = 0, k0 = s * n;
+      var cum = 0, cumA = 0, k0 = s * n;
       for (i = 0; i < n; i++) {
-        cum += (S1.u32(k0 + i) >>> 31) ? net[i] : -net[i];
-        if (s < BS) band[s * n + i] = cum;
+        var up = S1.u32(k0 + i) >>> 31;
+        cum += up ? net[i] : -net[i];
+        cumA += (up ? gross[i] : -gross[i]) - adv[i];
+        if (s < BS) band[s * n + i] = cumA;
       }
       var sm = cum / n; simMeans[s] = sm;
       if (sm >= st.mean - tol) ge++;
+      if (cumA / n >= st.mean - tol) geA++;
     }
     var nullP = (1 + ge) / (NS + 1);
     var lo = new Float64Array(n), hi = new Float64Array(n), col = new Float64Array(BS);
@@ -199,6 +213,9 @@
     R.nullSim = { sims: NS, p: nullP, countGE: ge, mean95: quant(sms, 0.95), bandLoEnd: lo[n - 1], bandHiEnd: hi[n - 1],
       bandLoMid: lo[Math.floor((n - 1) / 2)], bandHiMid: hi[Math.floor((n - 1) / 2)] };
     R.band = { lo: lo, hi: hi, paths: paths, real: realCum };
+    // informational: a trader with no skill who pays these costs (breakeven = no cost known, so the world is optimistic)
+    R.noSkill = { sims: NS, mean: -st.meanAdvCost, countGE: geA, pReach: geA / NS, breakeven: !(st.meanAdvCost > 0),
+      costKnown: costEntered, includesCost: o.includesCost };
 
     // bootstrap of the mean (stream 2)
     var S2 = new Stream(o.seed, 2), B = EC.BOOT, bm = new Float64Array(B), le0 = 0;
@@ -277,8 +294,8 @@
         "from " + o.oosStart.slice(0, 10) + ": " + os.length + " trades, mean " + fmt(R.oos.mean) + " (before: " + is.length + " trades, mean " + (is.length ? fmt(R.oos.meanIn) : "-") + ")", R.oos.mean);
       else add("oos", "Positive after your out-of-sample date", "na", "fewer than 10 trades after " + o.oosStart.slice(0, 10));
     } else add("oos", "Positive after your out-of-sample date", "na", "no out-of-sample date set");
-    add("randsign", "Beats the random-sign test", nullP < o.alpha ? "pass" : "fail",
-      "p = " + fmtP(nullP) + " from " + NS + " random-sign versions of your trades", nullP);
+    add("randsign", "Net average beats a random-sign test (is the net result reliably above zero)", nullP < o.alpha ? "pass" : "fail",
+      "p = " + fmtP(nullP) + " from " + NS + " versions of your net results with random signs", nullP);
     R.checks = checks;
 
     // verdict (order fixed by the design)
@@ -294,7 +311,8 @@
   };
 
   /* ------------------------------------------------------------------ forward Monte Carlo (the full report)
-   * Assume the measured edge is the true one (and, separately, that the edge is zero), simulate fwdSims
+   * Assume the measured edge is the true one (and, separately, that there is no skill: zero edge BEFORE costs, so
+   * the net mean is -meanAdvCost, "random direction, real costs"), simulate fwdSims
    * future trade sequences for each N in GRID, test each one like the verdict does (one-sided t at
    * alpha / N tried), and also price account drawdowns at a fixed risk per trade. */
   EC.GRID = [25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000];
@@ -317,14 +335,15 @@
     var mu = st.mean, sd = st.sd, W = st.avgWin, L = st.avgLoss, pw = st.winRate;
     if (model === "normal" && !(sd > 0)) { out.available = false; out.why = "all results are identical (no spread)"; return out; }
     if (model === "winloss" && !(W !== null && L !== null)) { out.available = false; out.why = "needs both winning and losing trades"; return out; }
-    var p0 = (model === "winloss") ? L / (W + L) : null;
+    // no-skill world: net mean = -c0 (c0 = average cost actually charged, >= 0). winloss: p0*W - (1-p0)*L = -c0.
+    var c0 = st.meanAdvCost, p0 = (model === "winloss") ? Math.min(1, Math.max(0, (L - c0) / (W + L))) : null;
     var aAdj = R.opts.alpha / R.opts.nTried;
     var tcrit = EC.GRID.map(function (N) { return tisf(aAdj, N - 1); });
-    out.alphaAdj = aAdj; out.tcrit = tcrit; out.p0 = p0;
+    out.alphaAdj = aAdj; out.tcrit = tcrit; out.p0 = p0; out.zeroMean = -c0;
     var rs = EC.rScale(R, opts.unit); out.rScale = rs.scale; out.rHow = rs.how;
     out.worlds = [];
     for (var w = 0; w < 2; w++) {
-      var S = new Stream(seed, 10 + 2 * mi + w), shift = w ? mu : 0, muW = w ? 0 : mu, pW = w ? p0 : pw;
+      var S = new Stream(seed, 10 + 2 * mi + w), shift = w ? mu + c0 : 0, muW = w ? -c0 : mu, pW = w ? p0 : pw;
       var draw;
       if (model === "normal") draw = function (k) {
         var u1 = (S.u32(2 * k) + 0.5) / TWO32, u2 = S.u32(2 * k + 1) / TWO32;
@@ -1035,6 +1054,14 @@
     all_pass: "Why: p is below your significance level after the correction for strategies tried, and every applicable check passed."
   };
 
+  // visible warning when no cost is known: the no-skill world then breaks even, which is optimistic
+  function noCostNote(NSk) {
+    if (!NSk.breakeven) return "";
+    return ' <strong class="ec-warn">' + (NSk.includesCost ?
+      "Your results are marked as already net of costs, but no cost per trade is known, so the no-skill world cannot take costs off: it breaks even on average, which is optimistic. Enter your average cost per trade (Settings) to see the real no-skill drift." :
+      "No costs entered: the no-skill world here breaks even on average, which is optimistic. Real trading with no skill loses the spread, commission and swap on every trade. Add a cost column or a cost per trade (Settings).") + "</strong>";
+  }
+
   function run() {
     if (!state.trades) return;
     var o = opts(), unit = o.unit, R = EC.analyze(state.trades, o);
@@ -1055,10 +1082,13 @@
       ["Win rate / break-even win rate", pct(st.winRate, 1) + " / " + (st.breakevenWinRate === null ? "-" : pct(st.breakevenWinRate, 1)) +
         (st.avgWin !== null && st.avgLoss !== null ? ' <span class="live-sub">(avg win ' + fmt(st.avgWin) + ", avg loss " + fmt(st.avgLoss) + ")</span>" : "")],
       ["t-statistic", st.t === null ? "-" : st.t.toFixed(2)],
-      ["p, one-sided (chance of an average this good with zero edge)", fmtP(st.p)],
+      ["p, one-sided (chance of a net average this good if the true net average were zero)", fmtP(st.p)],
       ["p corrected for " + R.opts.nTried + " strateg" + (R.opts.nTried === 1 ? "y" : "ies") + " tried (Bonferroni)", fmtP(st.pBonf)],
       ["Bootstrap 95% range of the average", fmt(R.boot.lo) + " to " + fmt(R.boot.hi) + " " + u],
-      ["Bootstrap samples with an average at or below zero", pctP(R.boot.pLE0)]
+      ["Bootstrap samples with an average at or below zero", pctP(R.boot.pLE0)],
+      ["A trader with no skill, paying your costs", "averages about " + fmt(R.noSkill.mean) + " " + u + " per trade; " +
+        pctP(R.noSkill.pReach) + " of " + R.noSkill.sims + " such versions reached your net average" +
+        (R.noSkill.breakeven ? ' <span class="ec-warn">(no costs known: breakeven, optimistic)</span>' : "")]
     ];
     $("ec-stats").innerHTML = rows.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th><td>" + r[1] + "</td></tr>"; }).join("");
     var icon = { pass: ["ec-pass", "PASS"], fail: ["ec-fail", "FAIL"], na: ["ec-na", "n/a"] };
@@ -1066,9 +1096,13 @@
       var ic = icon[k.status];
       return '<li class="' + ic[0] + '"><span class="ec-tag">' + ic[1] + "</span><span><strong>" + esc(k.label) + '</strong><br><span class="live-sub">' + esc(k.detail) + "</span></span></li>";
     }).join("");
-    $("ec-band-note").innerHTML = "Grey: " + EC.BAND_DRAW + " versions of your own trades with each trade's sign flipped at random (same trade sizes, no edge); the shaded area holds 95% of " +
-      EC.BAND_SIMS + " such curves. " + '<span style="color:' + (R.band.real[R.n - 1] >= 0 ? COL.green : COL.red) + '">Coloured</span>: your real running total after costs, ' +
-      fmt(R.band.real[R.n - 1], 2) + " " + u + ". Random-sign test: " + R.nullSim.countGE + " of " + EC.NULL_SIMS + " random versions did at least as well (p = " + fmtP(R.nullSim.p) + ").";
+    var NSk = R.noSkill;
+    $("ec-band-note").innerHTML = "Grey: " + EC.BAND_DRAW + " versions of your own trades with each trade's direction picked at random (same trade sizes before costs, no skill), " +
+      "and your real costs still paid on every trade; the shaded area holds 95% of " + EC.BAND_SIMS + " such curves. Random direction, real costs: a trader with no skill averages about " +
+      fmt(NSk.mean) + " " + u + " per trade" + (NSk.breakeven ? " (no cost is known, so here it breaks even). " : ", so the band drifts down by your costs. ") + '<span style="color:' + (R.band.real[R.n - 1] >= 0 ? COL.green : COL.red) + '">Coloured</span>: your real running total after costs, ' +
+      fmt(R.band.real[R.n - 1], 2) + " " + u + ". " + NSk.countGE + " of " + NSk.sims + " no-skill versions paying your costs reached your net average (" + pctP(NSk.pReach) + "). " +
+      "The verdict's random-sign test is separate: it asks whether your net average is reliably above zero by flipping the sign of each net result; " +
+      R.nullSim.countGE + " of " + EC.NULL_SIMS + " such versions did at least as well (p = " + fmtP(R.nullSim.p) + ")." + noCostNote(NSk);
     $("ec-seed-out").textContent = "Seed " + R.opts.seed + ": the same seed and the same data always give the same numbers.";
     drawBand(R);
     renderFull();
@@ -1121,15 +1155,17 @@
       "</tbody></table></div>" +
       '<p class="fine">Simulated: ' + F.sims.toLocaleString("en-US") + " futures per trade count, drawn from " + modelName + ", each tested like the verdict (one-sided t-test at your significance level divided by strategies tried); interpolated between the trade counts on the chart. Formula: n = ((z<sub>&alpha;</sub> + z<sub>power</sub>) &times; spread / average)&sup2;.</p>";
     html += '<h3>Chance the test shows the edge, by number of trades</h3><div class="ec-canvas"><canvas id="ec-power" role="img" aria-label="Chance that the test shows the edge, by number of future trades"></canvas></div>' +
-      '<p class="fine"><span style="color:' + COL.green + '">Green</span>: if your measured edge is real. <span style="color:' + COL.muted + '">Grey</span>: the same test with zero edge (false alarms; should stay near your significance level). Dashed: 80 / 90 / 95%.</p>';
+      '<p class="fine"><span style="color:' + COL.green + '">Green</span>: if your measured edge is real. <span style="color:' + COL.muted + '">Grey</span>: the same test with no skill (zero edge before costs, your costs still paid, so about ' + fmt(F.zeroMean) + " " + u + ' per trade): false alarms, which stay at or below your significance level. Dashed: 80 / 90 / 95%.</p>';
     html += '<h3>The range of your next 100 and 250 trades</h3><div class="ec-canvas"><canvas id="ec-range" role="img" aria-label="Range of total results after the next 100 and 250 trades, measured edge versus zero edge"></canvas></div>' +
-      '<p class="fine">Thin line: 90% of simulated futures (5th to 95th percentile). Box: the middle 50%. Tick: the median. Where the green and grey rows overlap, a real edge and pure luck look the same.</p>';
+      '<p class="fine">Thin line: 90% of simulated futures (5th to 95th percentile). Box: the middle 50%. Tick: the median. Grey rows: no skill, your costs paid (random direction, real costs). Where the green and grey rows overlap, a real edge and luck look the same.</p>';
     html += '<div class="table-wrap"><table class="compare live-table"><thead><tr><th scope="col"></th><th scope="col">Next 100</th><th scope="col">Next 250</th></tr></thead><tbody>' +
       '<tr><th scope="row">Measured edge: middle 90% of totals</th><td>' + fmt(E.kept[100].q05, 1) + " to " + fmt(E.kept[100].q95, 1) + "</td><td>" + fmt(E.kept[250].q05, 1) + " to " + fmt(E.kept[250].q95, 1) + "</td></tr>" +
       '<tr><th scope="row">Measured edge: chance of a net loss anyway</th><td>' + pctP(E.kept[100].pNeg) + "</td><td>" + pctP(E.kept[250].pNeg) + "</td></tr>" +
-      '<tr><th scope="row">Zero edge: middle 90% of totals</th><td>' + fmt(Z.kept[100].q05, 1) + " to " + fmt(Z.kept[100].q95, 1) + "</td><td>" + fmt(Z.kept[250].q05, 1) + " to " + fmt(Z.kept[250].q95, 1) + "</td></tr>" +
-      '<tr><th scope="row">Zero edge: chance to average at least your ' + fmt(st.mean) + " anyway</th><td>" + pctP(Z.kept[100].pAtLeastObserved) + "</td><td>" + pctP(Z.kept[250].pAtLeastObserved) + "</td></tr>" +
-      '</tbody></table></div><p class="fine">Totals in ' + u + ", after costs. These are simulations of what the measured numbers imply, not a forecast of your results.</p>";
+      '<tr><th scope="row">No edge (your costs paid): middle 90% of totals</th><td>' + fmt(Z.kept[100].q05, 1) + " to " + fmt(Z.kept[100].q95, 1) + "</td><td>" + fmt(Z.kept[250].q05, 1) + " to " + fmt(Z.kept[250].q95, 1) + "</td></tr>" +
+      '<tr><th scope="row">No edge (your costs paid): chance to average at least your ' + fmt(st.mean) + " anyway</th><td>" + pctP(Z.kept[100].pAtLeastObserved) + "</td><td>" + pctP(Z.kept[250].pAtLeastObserved) + "</td></tr>" +
+      '</tbody></table></div><p class="fine">Totals in ' + u + ", after costs. \"No edge\" means zero edge before costs, with your average cost of " + fmt(-F.zeroMean) + " " + u +
+      " still paid on every trade (random direction, real costs)" + (F.zeroMean < 0 ? "" : ", here zero because no cost is known") + ". These are simulations of what the measured numbers imply, not a forecast of your results.</p>" +
+      (state.R.noSkill.breakeven ? '<p class="fine">' + noCostNote(state.R.noSkill) + "</p>" : "");
     el.innerHTML = html;
     drawPower(F); drawRange(F, o.unit);
     renderRisk(F);
@@ -1140,7 +1176,7 @@
     var Zs = K.worlds[1], Es = K.worlds[0];
     function safe(w) { return w.safeK === 0 ? "below 0.05%" : w.safeK >= EC.RISK_STEPS ? "10% or more" : String(+w.safeRiskPct.toFixed(2)) + "%"; }
     html += '<p class="ec-big">Up to ' + safe(Zs) + ' <span class="ec-big-sub">risk per trade, with no edge</span></p>' +
-      "<p>Edge or no edge, sizing decides whether you survive. In the zero-edge simulation, risking up to <strong>" + safe(Zs) + "</strong> of the account per trade kept the chance of a 20% drawdown within the next 250 trades under 5%." +
+      "<p>Edge or no edge, sizing decides whether you survive. In the no-edge simulation (no skill, your costs still paid), risking up to <strong>" + safe(Zs) + "</strong> of the account per trade kept the chance of a 20% drawdown within the next 250 trades under 5%." +
       (state.R.stats.mean > 0 ? " Taking your measured edge at face value the limit is " + safe(Es) + (Es.safeK >= EC.RISK_STEPS ? " (the top of the range tested)" : "") + "; the true edge may be smaller than measured, so the zero-edge number is the cautious one." :
         " With your measured (not positive) average the limit is " + safe(Es) + ".") + "</p>";
     html += '<div class="table-wrap"><table class="compare live-table"><thead><tr><th scope="col">At ' + K.riskPct + '% risk per trade</th><th scope="col">Typical worst drawdown</th><th scope="col">1 in 10 futures worse than</th><th scope="col">Chance of -20%</th><th scope="col">Chance of -50%</th></tr></thead><tbody>';
@@ -1150,7 +1186,8 @@
         html += '<tr><th scope="row">' + names[wi] + ", next " + N + "</th><td>-" + pct(a.ddMedian, 1) + "</td><td>-" + pct(a.dd90, 1) + "</td><td>" + pctP(a.p20) + "</td><td>" + pctP(a.p50) + "</td></tr>";
       });
     });
-    html += '</tbody></table></div><p class="fine">Drawdown = the largest fall from a previous high of the account. Each simulated trade risks the chosen percentage of the current balance per 1R (' + esc(F.rHow) +
+    html += '</tbody></table></div><p class="fine">' + (F.zeroMean < 0 ? '"No edge" = zero edge before costs, your average cost of ' + fmt(-F.zeroMean) + " " + esc(state.opts.unit) +
+      " per trade still paid, so the account drifts down even before luck. " : '"No edge" = zero edge before costs; no cost is known, so this no-edge account breaks even on average, which is optimistic. ') + 'Drawdown = the largest fall from a previous high of the account. Each simulated trade risks the chosen percentage of the current balance per 1R (' + esc(F.rHow) +
       "). Same simulated futures as above. Slippage, gaps through the stop, several open trades at once and changing position sizes are not modelled, so real drawdowns can be deeper. This is risk-sizing education, not a promise of returns.</p>";
     $("ec-risk-out").innerHTML = html;
   }
