@@ -147,12 +147,23 @@
         { v: cN[2] + fcP, txt: small ? "low + " + fcR : "low + " + fcR + " pips: full range plays out up", up: true },
         { v: cN[1] - fcP, txt: small ? "high − " + fcR : "high − " + fcR + " pips: full range plays out down", up: false }
       ];
+      // main visual: expected-range band of height = forecast, centred on the current range mid (moves with the mid)
+      var mid = (cN[1] + cN[2]) / 2, bTop = y(mid + fcP / 2), bBot = y(mid - fcP / 2);
       g.globalAlpha = projA;
+      g.save(); g.fillStyle = exceeded ? "rgba(245,166,35,0.10)" : "rgba(34,196,53,0.10)"; g.fillRect(bx0, bTop, bx1 - bx0, bBot - bTop);
+      g.strokeStyle = lineCol; g.lineWidth = 2; g.setLineDash([]); g.strokeRect(Math.round(bx0) + 0.5, Math.round(bTop) + 0.5, Math.round(bx1 - bx0), Math.round(bBot - bTop));
+      var ym = Math.round(y(mid)) + 0.5; g.globalAlpha = projA * 0.5; g.setLineDash([2, 3]); g.lineWidth = 1;
+      g.beginPath(); g.moveTo(bx0, ym); g.lineTo(bx1, ym); g.stroke(); g.restore();
+      g.globalAlpha = projA;
+      tag((small ? "expected ~" : "expected range ~") + fcR + " pips" + (exceeded ? " (exceeded)" : ""), bx1 - 2, bTop - (fsL * 0.5 + 6), lineCol, fsL);
+      // faint extremes: where price ends if the whole range plays out one way; hidden once the range is exceeded
+      if (exceeded) lines = [];
+      g.globalAlpha = projA * 0.5;
       lines.forEach(function (L) {
         var yy = y(L.v), yTop = top + 2, yBot = Hh - bottom - 2;
         if (yy >= yTop && yy <= yBot) {
           var yr = Math.round(yy) + 0.5;
-          g.save(); g.strokeStyle = lineCol; g.lineWidth = 1.5; g.setLineDash([6, 4]);
+          g.save(); g.strokeStyle = lineCol; g.lineWidth = 1; g.setLineDash([4, 5]);
           g.beginPath(); g.moveTo(bx0, yr); g.lineTo(bx1, yr); g.stroke(); g.restore();
           tag(L.txt, bx0 - 4, yr + (L.up ? fsL * 0.5 + 6 : -(fsL * 0.5 + 6)), lineCol, fsL); // label on the inner side of each line
         } else {
