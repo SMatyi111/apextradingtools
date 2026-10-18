@@ -1054,7 +1054,7 @@
     if (kind === "email") {
       html = value + "<p>You have used the " + GATE.FREE_OWN_REPORTS + " free full reports in this browser. Get " + (GATE.CREDITS_ENABLED ? GATE.EMAIL_REPORTS + " more" : "unlimited full reports during the launch") + " with a free code by email:</p>" +
         '<p><a class="btn btn-green" href="' + GATE.EMAIL_URL + '" rel="noopener" target="_blank">Get the free unlock code by email</a></p>' +
-        '<p class="fine">The code comes from our Gumroad page (price $0). Your email is used for APXTT product news (new tools and launches); you can unsubscribe at any time. Your trades are not sent anywhere.</p>' +
+        '<p class="fine">The code comes from our Gumroad page (price $0). Gumroad delivers the code to your email. We only use it for Edge Check how-to messages; product news only if you subscribe to it separately. Your trades are not sent anywhere.</p>' +
         '<form id="ec-code-form" class="ec-inline"><label for="ec-code">Unlock code</label><input id="ec-code" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX"><button class="btn btn-ghost" type="submit">Unlock</button></form><p id="ec-code-msg" class="fine" role="status"></p>';
     } else {
       html = value + "<p>You have used the free and email reports in this browser. More full reports need a report key:</p>" +
