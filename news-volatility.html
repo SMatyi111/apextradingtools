@@ -104,28 +104,26 @@
     <h2>What you see on your chart</h2>
     <p class="shots-intro">Three moments of the same US jobs report (NFP), in MetaTrader&nbsp;5's Strategy Tester: a replay of
       2&nbsp;Oct&nbsp;2026 on real data, not a live chart and not a performance record. The panel shows how much of this hour's
-      expected range has been used and a lot size scaled to it. On the chart, the shaded box is the range traded so far
-      this hour; the dashed lines are the hour's low + the expected range and the hour's high &minus; the expected range,
-      both moving live; the grey bar on the right is the next hour's expected size.</p>
+      expected range has been used and a lot size scaled to it. On the chart, the blue band is the expected range, centred on
+      the middle of what has traded this hour and moving with it; the faint lines are the hour's low + the expected range and
+      the hour's high &minus; the expected range; the grey bar on the right is the next hour's expected size.</p>
     <div class="shots">
       <figure class="shot">
-        <a href="assets/proj-before-nfp.webp"><img src="assets/proj-before-nfp.webp" alt="MT5 M5 chart of EURUSD at 14:43, 47 minutes before NFP: panel says this hour 16 of 17 pips used, NFP in 47 minutes, expect about 58 pips; dashed lines at hour low + 17 and hour high - 17 pips; a tall bar marks the next hour at about 58 pips" loading="lazy" decoding="async" width="1113" height="916"></a>
-        <figcaption><strong>47 minutes before NFP.</strong> This hour: 16 of 17 pips used. The dashed lines show where price
-          gets to if the full 17-pip range plays out up or down: not a target. The tall bar on the right: the next hour,
-          the NFP hour, is expected at ~58 pips. The vol-sized lot (1% risk, stop = expected range) is 0.59 here and
-          0.17 in the NFP hour.</figcaption>
+        <a href="assets/proj-before-nfp.webp"><img src="assets/proj-before-nfp.webp" alt="MT5 M5 chart of EURUSD at 14:42, 48 minutes before NFP: panel says this hour 15 of 17 pips used; a band of about 17 pips centred on the hour's range; a tall grey bar marks the next hour at about 58 pips" loading="lazy" decoding="async" width="1113" height="916"></a>
+        <figcaption><strong>48 minutes before NFP.</strong> This hour: 15 of 17 pips used. The band is the 17-pip expected
+          range, centred on what has traded. The tall bar on the right: the next hour, the NFP hour, is expected at ~58 pips.
+          The vol-sized lot (1% risk, stop = expected range) is 0.59 here and 0.17 in the NFP hour.</figcaption>
       </figure>
       <figure class="shot">
-        <a href="assets/proj-mid-nfp.webp"><img src="assets/proj-mid-nfp.webp" alt="MT5 M5 chart of EURUSD at 15:57, 27 minutes after the NFP release: this hour 40 of 56 pips used; dashed lines at hour low + 56 and hour high - 56 pips" loading="lazy" decoding="async" width="1113" height="916"></a>
-        <figcaption><strong>27 minutes after the release.</strong> This hour: 40 of 56 pips used (71%). Hour low + 56 and hour
-          high &minus; 56 mark where price gets to if the full expected range plays out up or down; which way it goes, the
-          indicator does not say. Price axis compressed by hand so both lines fit.</figcaption>
+        <a href="assets/proj-mid-nfp.webp"><img src="assets/proj-mid-nfp.webp" alt="MT5 M5 chart of EURUSD at 15:56, 26 minutes after the NFP release: this hour 40 of 56 pips used; a tall band of about 56 pips around the hour's range, its bottom edge just below the visible price scale" loading="lazy" decoding="async" width="1113" height="916"></a>
+        <figcaption><strong>26 minutes after the release.</strong> This hour: 40 of 56 pips used (71%). The band shows the full
+          expected range around what has traded so far; which way the rest goes, the indicator does not say. Where an edge
+          falls off MT5's price scale, a note shows its price.</figcaption>
       </figure>
       <figure class="shot">
-        <a href="assets/proj-exceeded.webp"><img src="assets/proj-exceeded.webp" alt="MT5 M5 chart of EURUSD at about 16:57, the hour after NFP: this hour 30 of 27 pips used (112%), range exceeded, lines and labels in amber" loading="lazy" decoding="async" width="1113" height="916"></a>
-        <figcaption><strong>The hour after: range exceeded.</strong> 30 of 27 pips traded (112%), so the lines turn amber:
-          the expected size is already reached. It says nothing about whether the move continues. Price axis compressed
-          by hand.</figcaption>
+        <a href="assets/proj-exceeded.webp"><img src="assets/proj-exceeded.webp" alt="MT5 M5 chart of EURUSD at 16:58, the hour after NFP: this hour 32 of 27 pips used, range exceeded, band in amber" loading="lazy" decoding="async" width="1113" height="916"></a>
+        <figcaption><strong>The hour after: range exceeded.</strong> 32 of 27 pips traded, so the band turns amber and the
+          faint lines disappear: the expected size is already reached. It says nothing about whether the move continues.</figcaption>
       </figure>
     </div>
     <p class="fine shots-note">Replay of 2 Oct 2026, tester (MT5 Strategy Tester, real EURUSD minute data). Size, not
