@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Edge Check: is your trading edge real, or luck? (free, runs in your browser) | APXTT</title>
-<meta name="description" content="Drop your MT5/MT4 trade history or a CSV. Edge Check tests whether your results stand out from luck, checks stability and costs, and simulates how many trades you need. Runs in your browser; nothing is uploaded.">
+<meta name="description" content="Drop your MT5/MT4 trade history, your APXTT journal or a CSV. Edge Check tests whether your results stand out from luck, checks stability and costs, and simulates how many trades you need. Runs in your browser; nothing is uploaded.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Is your edge real, or luck?">
 <meta property="og:description" content="Free statistics check for your trade history. Runs in your browser; nothing is uploaded.">
@@ -57,9 +57,9 @@
   <div class="wrap narrow">
     <h2>1. Load your trades</h2>
     <label id="ec-drop" class="ec-drop" for="ec-file">
-      <input id="ec-file" type="file" accept=".csv,.txt,.htm,.html,.xlsx,text/csv,text/html">
+      <input id="ec-file" type="file" accept=".csv,.txt,.htm,.html,.xlsx,.xlsm,text/csv,text/html">
       <span class="ec-drop-main">Drop a file here, or tap to choose one</span>
-      <span class="ec-drop-sub">CSV &middot; APXTT MT5 export &middot; MT5 history report (.xlsx or .html) &middot; MT5 tester report &middot; MT4 statement (beta)</span>
+      <span class="ec-drop-sub">CSV &middot; APXTT journal (.xlsx) &middot; APXTT MT5 export &middot; MT5 history report (.xlsx or .html) &middot; MT5 tester report &middot; MT4 statement (beta)</span>
     </label>
     <details class="tech ec-paste-box">
       <summary>Or paste rows</summary>
@@ -165,6 +165,10 @@
     <ul class="steps">
       <li><strong>CSV</strong> (comma, semicolon or tab): a header row with <code>result</code> (or R, profit, pnl, pips), and ideally <code>date</code>, <code>symbol</code> and
         <code>cost</code> (cost per trade as a positive number). Dates like 2025-03-04 14:30 or 2025.03.04 work best.</li>
+      <li><strong>APXTT journal</strong> (Premium .xlsm, Premium Demo .xlsm or Basic .xlsx): drop the journal file itself. Only closed trades are read
+        (Check = OK); empty rows, open trades and rows the journal flags as incomplete are skipped. Premium and Demo: result = the R multiple, cost =
+        the commission in R (the journal's R is before commission). Basic: result = Net P/L in your account currency, already after commission.
+        Swap is not in the journal. The file must have been saved in Excel after the last change, so the results are calculated.</li>
       <li><strong>APXTT MT5 export script</strong>: a free MetaTrader 5 script that writes your closed trades, with commission, swap and fees, to a CSV this page reads.
         It does not trade and does not connect to the internet. <span class="live-sub">(Download link coming.)</span></li>
       <li><strong>MT5 history report</strong>: in MetaTrader 5, History tab &rarr; right-click &rarr; Report &rarr; Open XML (.xlsx) or HTML. The Positions table is used;

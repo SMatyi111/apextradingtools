@@ -655,39 +655,148 @@
   };
   function xmlUnescape(s) { return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, "&"); }
   function colIndex(ref) { var m = ref.match(/^[A-Z]+/), c = 0; if (!m) return -1; for (var i = 0; i < m[0].length; i++) c = c * 26 + (m[0].charCodeAt(i) - 64); return c - 1; }
-  EC.xlsxRows = function (buf) {
-    return EC.unzip(buf).then(function (files) {
-      var sst = [], sheetName = Object.keys(files).filter(function (n) { return /^xl\/worksheets\/sheet\d*\.xml$/.test(n); }).sort()[0];
-      if (!sheetName) throw new Error("no worksheet in the file");
-      if (files["xl/sharedStrings.xml"]) {
-        var sx = decodeText(files["xl/sharedStrings.xml"]), siRe = /<si>([\s\S]*?)<\/si>/g, m;
-        while ((m = siRe.exec(sx))) { var parts = [], tRe = /<t[^>]*>([\s\S]*?)<\/t>/g, t; while ((t = tRe.exec(m[1]))) parts.push(xmlUnescape(t[1])); sst.push(parts.join("")); }
+  function sharedStrings(files) {
+    var sst = [];
+    if (files["xl/sharedStrings.xml"]) {
+      var sx = decodeText(files["xl/sharedStrings.xml"]), siRe = /<si>([\s\S]*?)<\/si>/g, m;
+      while ((m = siRe.exec(sx))) { var parts = [], tRe = /<t[^>]*>([\s\S]*?)<\/t>/g, t; while ((t = tRe.exec(m[1]))) parts.push(xmlUnescape(t[1])); sst.push(parts.join("")); }
+    }
+    return sst;
+  }
+  // cached cell values of one worksheet. byRowNumber: rows[i] is spreadsheet row i+1 (missing rows = []),
+  // otherwise rows are listed in file order (the MT5 report path relies on that).
+  function sheetRows(xml, sst, byRowNumber) {
+    var x = decodeText(xml), rows = [], rRe = /<row\b([^>]*)>([\s\S]*?)<\/row>/g, r;
+    while ((r = rRe.exec(x))) {
+      var row = [], cRe = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, c;
+      while ((c = cRe.exec(r[2]))) {
+        var attrs = c[1], ref = (attrs.match(/\br="([A-Z]+\d+)"/) || [])[1], type = (attrs.match(/\bt="(\w+)"/) || [])[1], body = c[2] || "";
+        var v = (body.match(/<v>([\s\S]*?)<\/v>/) || [])[1], val = "";
+        if (type === "s") val = sst[+v] || "";
+        else if (type === "inlineStr") val = xmlUnescape((body.match(/<t[^>]*>([\s\S]*?)<\/t>/) || [])[1] || "");
+        else if (v !== undefined) val = xmlUnescape(v);
+        var ci = ref ? colIndex(ref) : row.length;
+        while (row.length < ci) row.push("");
+        row[ci] = val;
       }
-      var x = decodeText(files[sheetName]), rows = [], rRe = /<row\b[^>]*>([\s\S]*?)<\/row>/g, r;
-      while ((r = rRe.exec(x))) {
-        var row = [], cRe = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, c;
-        while ((c = cRe.exec(r[1]))) {
-          var attrs = c[1], ref = (attrs.match(/\br="([A-Z]+\d+)"/) || [])[1], type = (attrs.match(/\bt="(\w+)"/) || [])[1], body = c[2] || "";
-          var v = (body.match(/<v>([\s\S]*?)<\/v>/) || [])[1], val = "";
-          if (type === "s") val = sst[+v] || "";
-          else if (type === "inlineStr") val = xmlUnescape((body.match(/<t[^>]*>([\s\S]*?)<\/t>/) || [])[1] || "");
-          else if (v !== undefined) val = xmlUnescape(v);
-          var ci = ref ? colIndex(ref) : row.length;
-          while (row.length < ci) row.push("");
-          row[ci] = val;
-        }
-        rows.push(row);
+      var rn = +((r[1].match(/\br="(\d+)"/) || [])[1] || 0);
+      if (byRowNumber && rn > 0) { while (rows.length < rn - 1) rows.push([]); rows[rn - 1] = row; }
+      else rows.push(row);
+    }
+    return rows;
+  }
+  function firstSheetRows(files) {
+    var sheetName = Object.keys(files).filter(function (n) { return /^xl\/worksheets\/sheet\d*\.xml$/.test(n); }).sort()[0];
+    if (!sheetName) throw new Error("no worksheet in the file");
+    return sheetRows(files[sheetName], sharedStrings(files), false);
+  }
+  EC.xlsxRows = function (buf) { return EC.unzip(buf).then(firstSheetRows); };
+  // sheet name -> worksheet part, from xl/workbook.xml + its relationships
+  function sheetParts(files) {
+    var wb = files["xl/workbook.xml"], rel = files["xl/_rels/workbook.xml.rels"], out = {};
+    if (!wb || !rel) return out;
+    var ids = {}, m, rx = decodeText(rel), relRe = /<Relationship\b([^>]*)\/?>/g;
+    while ((m = relRe.exec(rx))) {
+      var id = (m[1].match(/\bId="([^"]+)"/) || [])[1], tg = (m[1].match(/\bTarget="([^"]+)"/) || [])[1];
+      if (id && tg) ids[id] = tg.charAt(0) === "/" ? tg.slice(1) : "xl/" + tg.replace(/^\.\//, "");
+    }
+    var wx = decodeText(wb), shRe = /<sheet\b([^>]*)\/?>/g;
+    while ((m = shRe.exec(wx))) {
+      var nm = (m[1].match(/\bname="([^"]*)"/) || [])[1], rid = (m[1].match(/\br:id="([^"]+)"/) || [])[1];
+      if (nm !== undefined && rid && ids[rid] && files[ids[rid]]) out[xmlUnescape(nm)] = ids[rid];
+    }
+    out.__date1904 = /<workbookPr\b[^>]*\bdate1904="(1|true)"/.test(wx);
+    return out;
+  }
+
+  /* ---- APXTT Excel trading journal (journal/v2: Premium, Premium Demo, Basic)
+   * Journal sheet: column headers on row 10, trades from row 11; the Check column holds the engine status and
+   * only "OK" rows are closed, counted trades (blank = unused row, OPEN = open trade, anything else = a row the
+   * journal itself flags as incomplete). Values are the ones Excel cached when the file was last saved.
+   * Premium / Demo have an R multiple column: result = R multiple (price move / stop distance, BEFORE
+   * commission), cost = commission / risk amount (risk amount from the hidden Calc sheet, column R), so
+   * "results include costs" = off. Basic has no R column: result = Net P/L (gross + commission, already net),
+   * cost = -Commission, so "results include costs" = on. */
+  function excelDate(serial, date1904) {
+    var ms = Math.round(((date1904 ? serial + 1462 : serial) - 25569) * 86400) * 1000, d = new Date(ms);
+    if (!isFinite(ms)) return null;
+    function p2(x) { return (x < 10 ? "0" : "") + x; }
+    return d.getUTCFullYear() + "-" + p2(d.getUTCMonth() + 1) + "-" + p2(d.getUTCDate()) + " " +
+      p2(d.getUTCHours()) + ":" + p2(d.getUTCMinutes()) + ":" + p2(d.getUTCSeconds());
+  }
+  EC.excelDate = excelDate;
+  function journalHeader(rows) {
+    for (var i = 0; i < Math.min(rows.length, 30); i++) {
+      var h = (rows[i] || []).map(function (x) { return String(x || "").trim().toLowerCase(); });
+      if (h[0] === "date" && h.indexOf("check") >= 0 && h.indexOf("net p/l") >= 0 && h.indexOf("commission") >= 0) return i;
+    }
+    return -1;
+  }
+  EC.isJournal = function (files) {
+    var parts = sheetParts(files);
+    if (!parts.Journal || !parts.Calc) return false;
+    return journalHeader(sheetRows(files[parts.Journal], sharedStrings(files), true)) >= 0;
+  };
+  EC.parseJournal = function (files) {
+    var parts = sheetParts(files), sst = sharedStrings(files), d1904 = parts.__date1904;
+    var J = sheetRows(files[parts.Journal], sst, true), C = parts.Calc ? sheetRows(files[parts.Calc], sst, true) : [];
+    var hr = journalHeader(J), H = J[hr].map(function (x) { return String(x || "").trim().toLowerCase(); });
+    var col = function (n) { return H.indexOf(n); };
+    var cDate = col("date"), cTime = col("time"), cInst = col("instrument"), cOut = col("outcome"), cGross = col("gross p/l"),
+      cComm = col("commission"), cNet = col("net p/l"), cR = col("r multiple"), cChk = col("check");
+    // a row counts as typed by its instrument / entry / outcome (the Demo has a merged note in column A below row 15)
+    var title = String((J[0] || [])[0] || ""), useR = cR >= 0;
+    var edition = /premium demo/i.test(title) ? "Premium Demo" : (/basic/i.test(title) || !useR) ? "Basic" : "Premium";
+    var info = { format: "APXTT journal (" + edition + ")", warnings: [], trades: [], hasCost: true,
+      unit: useR ? "R" : "money", includesCost: !useR, journal: { edition: edition, open: 0, flagged: 0, stale: 0, noRisk: 0 } };
+    var CALC_RISK = 17; // Calc column R = risk amount (journal/v2/build.py CALC["riskamt"])
+    var stat = info.journal;
+    for (var r = hr + 1; r < J.length; r++) {
+      var row = J[r] || [];
+      var chk = String(row[cChk] === undefined ? "" : row[cChk]).trim();
+      var typed = [cInst, col("entry price"), cOut].some(function (k) { return k >= 0 && String(row[k] || "").trim() !== ""; });
+      if (chk === "OPEN") { stat.open++; continue; }
+      if (chk !== "OK") {
+        if (!typed) continue;
+        if (chk === "" || chk === "0") stat.stale++; else stat.flagged++;
+        continue;
       }
-      return rows;
-    });
+      var comm = num(row[cComm]), result, cost = null;
+      if (useR) {
+        result = num(row[cR]);
+        var risk = num((C[r] || [])[CALC_RISK]);
+        if (!(risk > 0)) { var g = num(row[cGross]); risk = (isFinite(g) && result) ? g / result : NaN; }
+        if (risk > 0 && isFinite(comm)) cost = -comm / risk; else stat.noRisk++;
+      } else {
+        result = num(row[cNet]);
+        if (isFinite(comm)) cost = -comm;
+      }
+      if (!isFinite(result)) { stat.flagged++; continue; }
+      var dv = num(row[cDate]), tv = cTime >= 0 ? num(row[cTime]) : NaN, date = "";
+      if (isFinite(dv)) date = excelDate(isFinite(tv) ? Math.floor(dv) + (tv - Math.floor(tv)) : dv, d1904) || "";
+      else { var nd = normDate(row[cDate]); date = nd ? nd.v : ""; }
+      info.trades.push({ date: date, symbol: String(row[cInst] || ""), result: result, cost: cost });
+    }
+    if (useR) info.warnings.push("Journal results are read as R multiples (price move / stop distance), before commission; the commission of each trade is the cost, in R. \"Results include costs\" is off because the journal's R multiple excludes commission. Swap is not recorded in the journal.");
+    else info.warnings.push("Basic journal: results are Net P/L in your account currency (commission already taken off), so \"results include costs\" is on; the commission is the cost. Swap is not recorded in the journal.");
+    if (stat.open) info.warnings.push(stat.open + " open trade(s) skipped.");
+    if (stat.flagged) info.warnings.push(stat.flagged + " row(s) skipped: the journal's Check column flags them as incomplete.");
+    if (stat.noRisk) info.warnings.push(stat.noRisk + " trade(s) without a readable risk amount: their cost was left blank.");
+    if (!info.trades.length) {
+      info.error = stat.stale ? "The journal has trades but no calculated results in the file. Open it in Excel, let it calculate, save it, and drop it again."
+        : stat.open ? "The journal has only open trades. Fill in the Outcome of closed trades first." : "The journal has no closed trades yet.";
+    } else if (stat.stale) info.warnings.push(stat.stale + " row(s) without a calculated Check value skipped: open the journal in Excel and save it so every row is calculated.");
+    return info;
   };
 
   // ---- one entry point: bytes + file name -> Promise(info)
   EC.parseFile = function (buf, name) {
     var b = new Uint8Array(buf);
     if (b[0] === 0x50 && b[1] === 0x4b) {
-      return EC.xlsxRows(buf).then(function (rows) { return EC.parseReportRows(rows, "Excel report"); },
-        function (e) { return { error: "Could not read the Excel file (" + e.message + "). Save the report as HTML or use the MT5 export script.", warnings: [], trades: [] }; });
+      return EC.unzip(buf).then(function (files) {
+        if (EC.isJournal(files)) return EC.parseJournal(files);
+        return EC.parseReportRows(firstSheetRows(files), "Excel report");
+      }).then(null, function (e) { return { error: "Could not read the Excel file (" + e.message + "). Save the report as HTML or use the MT5 export script.", warnings: [], trades: [] }; });
     }
     var text = decodeText(b);
     return Promise.resolve(EC.parseText(text, name));
