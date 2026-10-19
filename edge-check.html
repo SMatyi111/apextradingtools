@@ -87,7 +87,7 @@
         <label>Out-of-sample from (optional)
           <input id="ec-oos" type="date"></label>
         <label>Simulation model
-          <select id="ec-model"><option value="empirical">Resample my own trades</option><option value="normal">Normal (average and spread)</option><option value="winloss">Fixed win / loss sizes</option></select></label>
+          <select id="ec-model"><option value="empirical">Resample my own trades</option><option value="normal">Normal (average and spread)</option><option value="winloss">Fixed win / loss sizes</option><option value="block">Block resample (keeps streaks)</option></select></label>
         <label>Risk per trade (% of account)
           <input id="ec-risk" type="number" min="0.05" max="10" step="0.05" value="1"></label>
         <label>Random seed
@@ -107,6 +107,7 @@
 
     <h3>Checks</h3>
     <ul id="ec-checks" class="ec-checks"></ul>
+    <div id="ec-serial-hint" class="ec-hint" hidden></div>
 
     <h3>Luck band: your trades vs the same trades with no skill, costs paid</h3>
     <div class="ec-canvas"><canvas id="ec-band" role="img" aria-label="Your cumulative result after costs compared with random-direction versions of the same trades that still pay your costs"></canvas></div>
@@ -146,6 +147,19 @@
         random, and still takes your costs off, so it drifts down by your costs. If your real curve stays inside the grey band, a trader with no skill paying
         your costs could have done the same. The line under the statistics gives that trader's average and how often one reached your net average.
         If no costs are known, this no-skill world breaks even, which is optimistic, and the page says so.</li>
+      <li><strong>Trade-to-trade dependence</strong> (an information line in the checks; it never changes the verdict). The t-test, the random-sign test, the bootstrap
+        and the default simulations all treat your trades as independent: one trade's result says nothing about the next. Real trading can break that, for example
+        a market regime that lasts for weeks, or tilt after a big loss or overconfidence after a big win. The line tests your results in trade order two ways:
+        the lag-1 autocorrelation (does a good trade tend to follow a good trade) and a runs test (are there fewer, longer streaks of wins and losses than chance
+        gives). If either test has p below 0.025, the line says wins and losses cluster. Clustered results also make the t-test's p too optimistic, because
+        streaky trades carry less independent information than their count suggests.</li>
+      <li><strong>Block resample (keeps streaks)</strong>, a simulation model under Settings. Resampling single trades shuffles them, so a run of five losses in your
+        record is broken up and spread out. A drawdown is a run of losses before the next high: when losses come in streaks, they pile up instead of being
+        interrupted by wins, so the fall is deeper than shuffled trades suggest. The block model copies runs of consecutive trades from your own record (block
+        length = the cube root of your trade count, rounded, at least 2: 7 for 350 trades, 8 for 520; the record wraps around at the end), so streaks up to
+        that length survive into the simulated futures and their drawdowns. With independent trades it gives about the same answer as resampling; with streaky
+        trades it gives a lower safe risk per trade and needs more trades to show the edge. "No edge" uses the same blocks shifted to zero edge before costs.
+        Streaks longer than a block are still cut, so treat it as a lower bound on the effect.</li>
       <li><strong>The bootstrap range</strong> resamples your own trades: it shows how much the average itself could move with a different draw of the same kind of trades.</li>
       <li><strong>How many trades you need</strong> assumes your measured average is the true edge and simulates many futures. Measured edges are usually
         too high (the best-looking strategy is the one you keep), so treat the number as a minimum.</li>

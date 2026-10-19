@@ -296,6 +296,15 @@
     } else add("oos", "Positive after your out-of-sample date", "na", "no out-of-sample date set");
     add("randsign", "Net average beats a random-sign test (is the net result reliably above zero)", nullP < o.alpha ? "pass" : "fail",
       "p = " + fmtP(nullP) + " from " + NS + " versions of your net results with random signs", nullP);
+    // serial dependence (informational: status "info" / "warn" / "na", never "fail", so it never enters the verdict)
+    var SD = R.serial = EC.serial(net);
+    if (SD.available) {
+      add("serial", SD.line, SD.cluster ? "warn" : "info",
+        "lag-1 autocorrelation " + SD.r1.toFixed(3) + " (" + pEq(SD.pAc) + ")" +
+        (SD.runs !== null ? "; " + SD.runs + " runs of wins and losses vs " + fmt(SD.runsExpected, 1) + " expected if independent (" + pEq(SD.pRuns) + ")" : "; runs test needs at least 2 wins and 2 losses") +
+        ". In trade order (" + (allDated ? "by date" : "file order") + "); flagged when either test gives p below " + EC.SERIAL_P +
+        ". Informational: it does not change the verdict.", SD.r1);
+    } else add("serial", "Results look independent from trade to trade", "na", SD.why);
     R.checks = checks;
 
     // verdict (order fixed by the design)
@@ -310,6 +319,43 @@
     return R;
   };
 
+  /* ------------------------------------------------------------------ serial dependence (Basso: "one day's return is
+   * not independent of the others"). Two classic tests on the net results in trade order, both two-sided:
+   *  - lag-1 autocorrelation r1; under independence r1 ~ N(-1/n, 1/n), so z = (r1 + 1/n) * sqrt(n);
+   *  - Wald-Wolfowitz runs test on wins (> 0) vs losses (< 0), breakeven trades left out.
+   * Flag = p below SERIAL_P (5% split over the two tests) in either test. Cluster = positive dependence
+   * (r1 above -1/n, or fewer runs than expected), i.e. streaks longer than chance. */
+  EC.SERIAL_MIN = 20; EC.SERIAL_P = 0.025;
+  EC.serial = function (x) {
+    var n = x.length, out = { n: n, available: false }, i;
+    if (n < EC.SERIAL_MIN) { out.why = "needs at least " + EC.SERIAL_MIN + " trades"; return out; }
+    var m = sum(x) / n, den = 0, nu = 0;
+    for (i = 0; i < n; i++) { var d = x[i] - m; den += d * d; }
+    if (!(den > 0)) { out.why = "all results are identical"; return out; }
+    for (i = 0; i + 1 < n; i++) nu += (x[i] - m) * (x[i + 1] - m);
+    var r1 = nu / den, zA = (r1 + 1 / n) * Math.sqrt(n), pA = 2 * normsf(Math.abs(zA));
+    var seq = [], n1 = 0, n2 = 0;
+    for (i = 0; i < n; i++) { if (x[i] > 0) { seq.push(1); n1++; } else if (x[i] < 0) { seq.push(0); n2++; } }
+    var N = n1 + n2, runs = null, eR = null, zR = null, pR = null;
+    if (n1 >= 2 && n2 >= 2) {
+      runs = 1;
+      for (i = 1; i < N; i++) if (seq[i] !== seq[i - 1]) runs++;
+      eR = 2 * n1 * n2 / N + 1;
+      var vR = 2 * n1 * n2 * (2 * n1 * n2 - N) / (N * N * (N - 1));
+      zR = (runs - eR) / Math.sqrt(vR); pR = 2 * normsf(Math.abs(zR));
+    }
+    var P = EC.SERIAL_P;
+    var cluster = (zA > 0 && pA < P) || (zR !== null && zR < 0 && pR < P);
+    var alternate = !cluster && ((zA < 0 && pA < P) || (zR !== null && zR > 0 && pR < P));
+    out.available = true;
+    out.r1 = r1; out.zAc = zA; out.pAc = pA; out.nWin = n1; out.nLoss = n2;
+    out.runs = runs; out.runsExpected = eR; out.zRuns = zR; out.pRuns = pR;
+    out.cluster = cluster; out.alternate = alternate;
+    out.line = cluster ? "Wins and losses cluster: streaks are longer than chance" :
+      alternate ? "Wins and losses alternate more often than chance" : "Results look independent from trade to trade";
+    return out;
+  };
+
   /* ------------------------------------------------------------------ forward Monte Carlo (the full report)
    * Assume the measured edge is the true one (and, separately, that there is no skill: zero edge BEFORE costs, so
    * the net mean is -meanAdvCost, "random direction, real costs"), simulate fwdSims
@@ -317,7 +363,10 @@
    * alpha / N tried), and also price account drawdowns at a fixed risk per trade. */
   EC.GRID = [25, 50, 75, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000];
   EC.FWD_SIMS = 1000; EC.KEEP = [100, 250]; EC.RISK_STEPS = 200; // risk grid k/2000 = 0.05% .. 10%
-  EC.MODELS = ["normal", "winloss", "empirical"];
+  EC.MODELS = ["normal", "winloss", "empirical", "block"]; // order fixes the PRNG streams (10 + 2*index + world): append only
+  // block resample: circular fixed-length blocks of the trade sequence (Politis-Romano circular block bootstrap);
+  // length = round(cube root of the number of trades), at least 2 (the usual n^(1/3) rate for block bootstraps)
+  EC.blockLen = function (n) { return Math.min(n, Math.max(2, Math.round(Math.pow(n, 1 / 3)))); };
 
   EC.rScale = function (R, unit) {
     var st = R.stats;
@@ -340,6 +389,8 @@
     var aAdj = R.opts.alpha / R.opts.nTried;
     var tcrit = EC.GRID.map(function (N) { return tisf(aAdj, N - 1); });
     out.alphaAdj = aAdj; out.tcrit = tcrit; out.p0 = p0; out.zeroMean = -c0;
+    var bl = EC.blockLen(n);
+    if (model === "block") out.blockLen = bl;
     var rs = EC.rScale(R, opts.unit); out.rScale = rs.scale; out.rHow = rs.how;
     out.worlds = [];
     for (var w = 0; w < 2; w++) {
@@ -350,6 +401,11 @@
         return muW + sd * (Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2));
       };
       else if (model === "winloss") draw = function (k) { return S.u32(k) / TWO32 < pW ? W : -L; };
+      else if (model === "block") draw = function (k, k0, j) {
+        // block q of a path starts at a uniform trade (draw k0 + q) and copies bl consecutive trades, wrapping around
+        var q = (j / bl) | 0;
+        return net[(Math.floor(S.u32(k0 + q) / TWO32 * n) + j % bl) % n] - shift;
+      };
       else draw = function (k) { return net[Math.floor(S.u32(k) / TWO32 * n)] - shift; };
       var res = { power: [], kept: {} }, base = 0;
       for (var gi = 0; gi < EC.GRID.length; gi++) {
@@ -357,7 +413,7 @@
         var keep = EC.KEEP.indexOf(N) >= 0 ? new Float64Array(M * N) : null, sqN = Math.sqrt(N);
         for (var p = 0; p < M; p++) {
           var s = 0, k0 = base + p * N, j;
-          for (j = 0; j < N; j++) { var x = draw(k0 + j); buf[j] = x; s += x; }
+          for (j = 0; j < N; j++) { var x = draw(k0 + j, k0, j); buf[j] = x; s += x; }
           var m = s / N, ss = 0;
           for (j = 0; j < N; j++) { var d = buf[j] - m; ss += d * d; }
           var sdp = Math.sqrt(ss / (N - 1));
@@ -441,7 +497,8 @@
     if (p < 0.0001) return "< 0.0001";
     return p.toFixed(4);
   }
-  EC.fmt = fmt; EC.fmtP = fmtP;
+  function pEq(p) { var t = fmtP(p); return t.charAt(0) === "<" ? "p " + t : "p = " + t; }
+  EC.fmt = fmt; EC.fmtP = fmtP; EC.pEq = pEq;
 
   /* ------------------------------------------------------------------ input parsing */
   function normDate(s) {
@@ -1088,14 +1145,18 @@
       ["Bootstrap samples with an average at or below zero", pctP(R.boot.pLE0)],
       ["A trader with no skill, paying your costs", "averages about " + fmt(R.noSkill.mean) + " " + u + " per trade; " +
         pctP(R.noSkill.pReach) + " of " + R.noSkill.sims + " such versions reached your net average" +
-        (R.noSkill.breakeven ? ' <span class="ec-warn">(no costs known: breakeven, optimistic)</span>' : "")]
+        (R.noSkill.breakeven ? ' <span class="ec-warn">(no costs known: breakeven, optimistic)</span>' : "")],
+      ["Trade-to-trade dependence (lag-1 autocorrelation; runs of wins and losses)", R.serial.available ?
+        R.serial.r1.toFixed(3) + " (" + EC.pEq(R.serial.pAc) + "); " + (R.serial.runs !== null ? R.serial.runs + " runs vs " + fmt(R.serial.runsExpected, 1) +
+        " expected (" + EC.pEq(R.serial.pRuns) + ")" : "runs test n/a") + '<br><span class="live-sub">' + esc(R.serial.line) + "</span>" : "- (" + esc(R.serial.why) + ")"]
     ];
     $("ec-stats").innerHTML = rows.map(function (r) { return '<tr><th scope="row">' + r[0] + "</th><td>" + r[1] + "</td></tr>"; }).join("");
-    var icon = { pass: ["ec-pass", "PASS"], fail: ["ec-fail", "FAIL"], na: ["ec-na", "n/a"] };
+    var icon = { pass: ["ec-pass", "PASS"], fail: ["ec-fail", "FAIL"], na: ["ec-na", "n/a"], info: ["ec-st-info", "INFO"], warn: ["ec-st-warn", "NOTE"] };
     $("ec-checks").innerHTML = R.checks.map(function (k) {
       var ic = icon[k.status];
       return '<li class="' + ic[0] + '"><span class="ec-tag">' + ic[1] + "</span><span><strong>" + esc(k.label) + '</strong><br><span class="live-sub">' + esc(k.detail) + "</span></span></li>";
     }).join("");
+    renderSerialHint(R, o);
     var NSk = R.noSkill;
     $("ec-band-note").innerHTML = "Grey: " + EC.BAND_DRAW + " versions of your own trades with each trade's direction picked at random (same trade sizes before costs, no skill), " +
       "and your real costs still paid on every trade; the shaded area holds 95% of " + EC.BAND_SIMS + " such curves. Random direction, real costs: a trader with no skill averages about " +
@@ -1106,6 +1167,19 @@
     $("ec-seed-out").textContent = "Seed " + R.opts.seed + ": the same seed and the same data always give the same numbers.";
     drawBand(R);
     renderFull();
+  }
+
+  // clustered wins/losses: point to the block model (the shuffling models understate streak drawdowns)
+  function renderSerialHint(R, o) {
+    var el = $("ec-serial-hint"), SD = R.serial;
+    if (!SD || !SD.cluster) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    el.innerHTML = "<strong>Your wins and losses come in streaks.</strong> The default simulation resamples single trades, which breaks streaks apart and " +
+      "makes drawdowns look shallower than your record suggests. " + (o.model === "block" ? "You are using the block model, which keeps streaks of up to " +
+      EC.blockLen(R.n) + " trades." : 'The "Block resample (keeps streaks)" model keeps runs of ' + EC.blockLen(R.n) + " consecutive trades together." +
+      '<br><button type="button" class="btn btn-ghost" id="ec-use-block">Use the block model</button>');
+    var b = $("ec-use-block");
+    if (b) b.onclick = function () { $("ec-model").value = "block"; run(); };
   }
 
   /* ---------------------------------------------------------------- render: full report (gated) */
@@ -1138,7 +1212,8 @@
     var R = state.R, st = R.stats, u = esc(o.unit), el = $("ec-fwd");
     if (!F.available) { el.innerHTML = '<p class="live-status">The forward simulation is not available for this data: ' + esc(F.why) + ". Try another model.</p>"; $("ec-risk-out").innerHTML = ""; return; }
     var E = F.worlds[0], Z = F.worlds[1], an = R.analytic.nNeeded, html = "";
-    var modelName = { normal: "a normal distribution with your average and spread", winloss: "fixed wins and losses at your win rate, average win and average loss", empirical: "your own trades, resampled" }[F.model];
+    var modelName = { normal: "a normal distribution with your average and spread", winloss: "fixed wins and losses at your win rate, average win and average loss", empirical: "your own trades, resampled",
+      block: "blocks of " + F.blockLen + " consecutive trades from your own record (keeps streaks)" }[F.model];
     function nfmt(v) { return v === null ? "more than 2,000" : v.toLocaleString("en-US"); }
     var aTxt = F.alphaAdj < 0.001 ? F.alphaAdj.toExponential(1) : String(+F.alphaAdj.toFixed(4));
     if (st.mean > 0) {
@@ -1155,7 +1230,9 @@
       "</tbody></table></div>" +
       '<p class="fine">Simulated: ' + F.sims.toLocaleString("en-US") + " futures per trade count, drawn from " + modelName + ", each tested like the verdict (one-sided t-test at your significance level divided by strategies tried); interpolated between the trade counts on the chart. Formula: n = ((z<sub>&alpha;</sub> + z<sub>power</sub>) &times; spread / average)&sup2;.</p>";
     html += '<h3>Chance the test shows the edge, by number of trades</h3><div class="ec-canvas"><canvas id="ec-power" role="img" aria-label="Chance that the test shows the edge, by number of future trades"></canvas></div>' +
-      '<p class="fine"><span style="color:' + COL.green + '">Green</span>: if your measured edge is real. <span style="color:' + COL.muted + '">Grey</span>: the same test with no skill (zero edge before costs, your costs still paid, so about ' + fmt(F.zeroMean) + " " + u + ' per trade): false alarms, which stay at or below your significance level. Dashed: 80 / 90 / 95%.</p>';
+      '<p class="fine"><span style="color:' + COL.green + '">Green</span>: if your measured edge is real. <span style="color:' + COL.muted + '">Grey</span>: the same test with no skill (zero edge before costs, your costs still paid, so about ' + fmt(F.zeroMean) + " " + u + ' per trade): false alarms, ' +
+      (F.model === "block" ? "which can rise above your significance level here: the test assumes independent trades, and the blocks keep your streaks." : "which stay at or below your significance level.") +
+      " Dashed: 80 / 90 / 95%.</p>";
     html += '<h3>The range of your next 100 and 250 trades</h3><div class="ec-canvas"><canvas id="ec-range" role="img" aria-label="Range of total results after the next 100 and 250 trades, measured edge versus zero edge"></canvas></div>' +
       '<p class="fine">Thin line: 90% of simulated futures (5th to 95th percentile). Box: the middle 50%. Tick: the median. Grey rows: no skill, your costs paid (random direction, real costs). Where the green and grey rows overlap, a real edge and luck look the same.</p>';
     html += '<div class="table-wrap"><table class="compare live-table"><thead><tr><th scope="col"></th><th scope="col">Next 100</th><th scope="col">Next 250</th></tr></thead><tbody>' +

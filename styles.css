@@ -266,6 +266,10 @@ h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); margin: 0 0 32px; text-align: cent
 .ec-pass .ec-tag { background: rgba(34, 196, 53, 0.16); color: var(--green-hi); }
 .ec-fail .ec-tag { background: rgba(255, 90, 79, 0.16); color: #ff7b72; }
 .ec-na .ec-tag { background: rgba(159, 179, 195, 0.14); color: var(--muted); }
+.ec-st-info .ec-tag { background: rgba(120, 170, 230, 0.16); color: #8fbcef; }
+.ec-st-warn .ec-tag { background: rgba(245, 166, 35, 0.16); color: #f5a623; }
+.ec-hint { background: var(--panel); border: 1px solid #f5a623; border-radius: 10px; padding: 12px 14px; margin: 10px 0 0; color: var(--text); overflow-wrap: anywhere; }
+.ec-hint .btn { margin-top: 8px; padding: 7px 16px; font: inherit; font-weight: 600; cursor: pointer; background: transparent; }
 .ec-canvas { width: 100%; background: var(--ink); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .ec-canvas canvas { display: block; }
 .section h3 { margin: 30px 0 10px; font-size: 1.1rem; }
