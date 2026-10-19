@@ -221,7 +221,7 @@
         </table>
       </div>
     </div>
-    <p class="fine">Data: Dukascopy BID prices. Error = average absolute miss of the hour's high-low range, in pips; lower is
+    <p class="fine">Rows marked "not scored" had no on-time receipt and are excluded by the preregistered rules; hours with no forecast at all are listed in the log's AMENDMENTS. Data: Dukascopy BID prices. Error = average absolute miss of the hour's high-low range, in pips; lower is
       better. Release hours = the hour of a scheduled release for one of the pair's two currencies.
       <a href="https://github.com/SMatyi111/apxtt-newsvol-live" rel="noopener">Code and full log</a> &middot;
       <a href="https://github.com/SMatyi111/apxtt-newsvol-live/blob/main/PREREGISTRATION.md" rel="noopener">The rules (preregistration)</a> &middot;
@@ -299,6 +299,7 @@
         var q = r.pairs[pr] || {};
         return "<tr><th scope=\"row\">" + r.target_hour_utc.slice(5, 16).replace("T", " ") +
           (r.events && r.events.length ? " <span class=\"live-ev\">" + r.events.join(" ").replace(/ev_/g, "").replace(/_post/g, "+1h") + "</span>" : "") +
+          (r.on_time === false ? " <span class=\"live-ev\">not scored</span>" : "") +
           "</th><td>" + f1(q.model) + "</td><td>" + f1(q.sh20) + "</td><td>" + f1(q.atr) + "</td><td>" + f1(q.actual) + "</td></tr>";
       });
       document.getElementById("live-last").innerHTML = rows.length ? rows.join("") : "<tr><td colspan=\"5\">The first forecast is for 19 Oct 00:00 UTC.</td></tr>";
