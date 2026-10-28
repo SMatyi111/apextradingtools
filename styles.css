@@ -126,7 +126,7 @@ h2 { font-size: clamp(1.6rem, 3.5vw, 2.3rem); margin: 0 0 32px; text-align: cent
   .nav-inner { flex-direction: column; height: auto; padding: 10px 0 8px; gap: 6px; }
   .nav nav { gap: 16px; flex-wrap: wrap; justify-content: center; }
   .nav nav a { white-space: nowrap; font-size: 0.9rem; }
-  .nav nav a:nth-child(n+4) { display: none; }
+  .nav nav a:nth-child(n+5) { display: none; }
   .section { padding: 56px 0; }
 }
 
@@ -319,4 +319,82 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 0.88em; color
   .ec-teaser img { width: 108px; flex-basis: 108px; }
   .ec-teaser-text { display: none; }
   .ec-teaser strong { font-size: 0.95rem; }
+}
+
+/* ---------------------------------------------------------------- Lot Size Calculator (lot-size-calculator.html) */
+.ls-layout [hidden] { display: none !important; }
+.ls-hero { padding-bottom: 48px; }
+.ls-h1-sub { color: var(--text); font-size: clamp(1.05rem, 2.6vw, 1.3rem); margin: -6px 0 18px; }
+.ls-section { padding-top: 48px; }
+.ls-layout { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
+.ls-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+.ls-inputs { display: flex; flex-direction: column; gap: 16px; }
+.ls-inputs label, .ls-field legend { display: flex; flex-direction: column; gap: 5px; font-size: 0.88rem; color: var(--muted); }
+.ls-field { border: 0; margin: 0; padding: 0; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.ls-field legend { padding: 0; margin-bottom: 6px; }
+.ls-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ls-inputs input[type=number], .ls-inputs select { font: inherit; font-size: 1rem; color: var(--text); background: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; min-width: 0; width: 100%; }
+.ls-inputs input:focus-visible, .ls-inputs select:focus-visible { outline: 2px solid var(--green-hi); outline-offset: 1px; }
+.ls-seg { display: inline-flex; background: var(--ink); border: 1px solid var(--line); border-radius: 999px; padding: 3px; align-self: flex-start; }
+.ls-seg label { flex-direction: row; gap: 0; cursor: pointer; }
+.ls-seg input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ls-seg span { padding: 5px 14px; border-radius: 999px; font-size: 0.86rem; color: var(--muted); }
+.ls-seg input:checked + span { background: var(--green); color: #fff; }
+.ls-seg input:focus-visible + span { outline: 2px solid var(--green-hi); outline-offset: 1px; }
+.ls-suffix { display: flex; align-items: center; gap: 8px; }
+.ls-suffix span { color: var(--text); font-weight: 600; min-width: 2.2em; }
+.ls-hint { font-size: 0.8rem; color: var(--muted) !important; margin: 2px 0 0; }
+.ls-rate-title { font-size: 0.88rem; color: var(--muted); }
+.ls-rate-line { display: flex; align-items: center; gap: 8px; color: var(--text); white-space: nowrap; }
+.ls-rate-line input { flex: 1 1 auto; }
+.ls-rate input.ls-need { border-color: #f5a623; box-shadow: 0 0 0 1px #f5a623; }
+.ls-fx { margin: -6px 0 0 !important; font-size: 0.8rem !important; }
+.ls-warn-text { color: #f5a623 !important; }
+.ls-link { font: inherit; color: var(--green-hi); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+.ls-adv { margin: 0; }
+.ls-adv label { margin-top: 6px; }
+.ls-side { display: flex; flex-direction: column; gap: 18px; position: sticky; top: 84px; }
+.ls-result { border-color: var(--green); }
+.ls-label { text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.75rem; margin: 0 !important; }
+.ls-big { font-size: clamp(2.2rem, 7vw, 3.2rem); font-weight: 800; color: var(--text) !important; margin: 0 0 14px !important; line-height: 1.15;
+  font-variant-numeric: tabular-nums; }
+.ls-big span { font-size: 1.1rem; font-weight: 600; color: var(--muted); }
+.ls-big-empty { color: var(--muted) !important; }
+.ls-table th, .ls-table td { padding: 8px 12px; font-size: 0.9rem; }
+.ls-table td { text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+.ls-table tr:last-child th, .ls-table tr:last-child td { border-bottom: 0; }
+.ls-table { background: var(--ink); }
+.ls-sub { color: var(--muted); }
+.ls-alert { color: var(--text) !important; background: rgba(245, 166, 35, 0.1); border: 1px solid #f5a623; border-radius: 10px;
+  padding: 10px 14px; margin: 14px 0 0; font-size: 0.9rem; }
+.ls-alert strong { color: #f5a623; }
+.ls-errors { color: #f5a623; margin: 0; padding-left: 1.2rem; font-size: 0.9rem; }
+.ls-cta { background: var(--navy); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+.ls-cta p { margin: 0 0 10px; color: var(--muted); font-size: 0.9rem; }
+.ls-cta strong { color: var(--text); }
+.ls-cta-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.ls-cta .btn { padding: 8px 18px; font-size: 0.9rem; }
+.ls-cta-fine { font-size: 0.78rem !important; margin: 0 !important; }
+.ls-privacy { max-width: 760px; margin: 22px auto 0; text-align: center; }
+.ls-conv th, .ls-conv td { padding: 10px 12px; font-size: 0.9rem; }
+.ls-conv td { color: var(--muted); }
+.ls-soon { background: var(--panel); border: 1px dashed var(--line); border-radius: var(--radius); padding: 20px; }
+.ls-soon-tag { color: #f5a623 !important; text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.75rem; margin: 0 0 8px; }
+.ls-soon-toggle { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; color: var(--muted); opacity: 0.7; cursor: not-allowed;
+  border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; margin-top: 6px; }
+.ls-soon-toggle input { width: 18px; height: 18px; }
+.ls-soon-badge { font-size: 0.72rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #f5a623;
+  border: 1px solid #f5a623; border-radius: 6px; padding: 2px 6px; }
+#faq h3 { margin: 26px 0 8px; }
+.ls-teaser-line { margin-top: 10px; }
+@media (max-width: 860px) {
+  .ls-layout { grid-template-columns: 1fr; }
+  .ls-side { position: static; }
+}
+@media (max-width: 420px) {
+  .ls-card { padding: 16px 14px; }
+  .ls-row2 { grid-template-columns: 1fr; }
+  .ls-table th, .ls-table td { padding: 7px 8px; font-size: 0.84rem; }
+  .ls-conv th, .ls-conv td { padding: 8px 6px; font-size: 0.8rem; }
 }

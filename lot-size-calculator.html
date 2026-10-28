@@ -1,0 +1,244 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lot Size Calculator (Forex, Gold, Indices) - free position size calculator | APXTT</title>
+<meta name="description" content="Free lot size and position size calculator for forex, gold, silver, indices and crypto. Any account currency, ECB exchange rates, stop in pips or prices, rounded down to your broker's lot step. Runs in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2302192b'/%3E%3Cg fill='%231aa82a'%3E%3Crect x='5' y='10' width='4' height='9'/%3E%3Crect x='11' y='14' width='4' height='6'/%3E%3Crect x='17' y='9' width='4' height='9'/%3E%3Crect x='23' y='5' width='4' height='12'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="canonical" href="https://smatyi111.github.io/apextradingtools/lot-size-calculator.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Apex Trading Tools">
+<meta property="og:title" content="Lot Size Calculator (Forex, Gold, Indices)">
+<meta property="og:description" content="Free position size calculator: risk %, stop loss, any account currency. Pip conventions stated, rounded down to your broker's lot step. Runs in your browser.">
+<meta property="og:url" content="https://smatyi111.github.io/apextradingtools/lot-size-calculator.html">
+<meta name="twitter:card" content="summary">
+<link rel="stylesheet" href="styles.css?v=20261028a">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "How is the lot size calculated?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Lot size = money at risk / (stop distance in price x contract size x exchange rate from the quote currency to your account currency), rounded down to your broker's lot step. Example: a 10,000 USD account risking 1% (100 USD) on EURUSD with a 20-pip stop: one standard lot is 100,000 EUR, so 20 pips (0.0020) cost 200 USD per lot, and 100 / 200 = 0.50 lots."}},
+    {"@type": "Question", "name": "What is the difference between a pip and a point?",
+     "acceptedAnswer": {"@type": "Answer", "text": "On this page a pip is 0.0001 for most currency pairs and 0.01 for pairs quoted in JPY or HUF; for gold a pip is 0.10 and for silver 0.01. A point is 1.0 of the price for indices and crypto. MetaTrader calls the smallest price step a point, which for a 5-digit forex quote is a tenth of a pip, so check which one your platform shows."}},
+    {"@type": "Question", "name": "Why is the lot size rounded down?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Brokers only accept sizes in steps, usually 0.01 lots. Rounding up would risk more than you chose; rounding down never does. The calculator shows the money at risk at the rounded size and warns when rounding cuts the risk by more than 10% or when the size is below the minimum lot."}},
+    {"@type": "Question", "name": "Why do contract sizes for indices and crypto differ between brokers?",
+     "acceptedAnswer": {"@type": "Answer", "text": "Index and crypto CFDs are defined by each broker. One lot of US30 can be 1, 10 or 0.1 times the index, and one lot of BTCUSD can be 1 coin or a fraction of one. Check the contract size in your platform's symbol specification and enter it in the calculator's contract size field."}}
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="APXTT home">
+      <svg class="brand-mark" viewBox="0 0 64 40" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="4" y="8" width="7" height="14" rx="1.5"/><rect x="7" y="4" width="1.2" height="22"/>
+          <rect x="16" y="15" width="7" height="8" rx="1.5"/><rect x="19" y="12" width="1.2" height="14"/>
+          <rect x="28" y="19" width="7" height="13" rx="1.5"/><rect x="31" y="16" width="1.2" height="20"/>
+          <rect x="40" y="11" width="7" height="13" rx="1.5"/><rect x="43" y="8" width="1.2" height="19"/>
+          <rect x="52" y="3" width="7" height="22" rx="1.5"/><rect x="55" y="0" width="1.2" height="28"/>
+        </g>
+      </svg>
+      <span class="brand-text">APXTT</span>
+    </a>
+    <nav>
+      <a href="index.html">Journal</a>
+      <a href="edge-check.html">Edge Check</a>
+      <a href="#conventions">Pip conventions</a>
+      <a href="#faq">FAQ</a>
+      <a href="news-volatility.html">News Volatility</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero ls-hero">
+  <div class="wrap hero-inner">
+    <p class="eyebrow">Free tool &middot; runs in your browser</p>
+    <h1>Lot Size Calculator</h1>
+    <p class="ls-h1-sub">Forex, gold, indices and crypto &middot; any account currency</p>
+    <p class="lead">Enter your balance, your risk and your stop loss. You get the position size in lots, rounded down to your
+      broker's step, and the money you actually risk at that size. Every pip and contract convention is stated below.</p>
+  </div>
+</section>
+
+<section id="calc" class="section ls-section">
+  <div class="wrap">
+    <form id="ls-form" class="ls-layout" autocomplete="off" novalidate>
+      <div class="ls-card ls-inputs">
+        <div class="ls-row2">
+          <label>Account currency
+            <select id="ls-ccy"></select></label>
+          <label>Account balance
+            <input id="ls-balance" type="number" inputmode="decimal" min="0" step="any" value="10000"></label>
+        </div>
+
+        <fieldset class="ls-field">
+          <legend>Risk per trade</legend>
+          <div class="ls-seg" role="radiogroup" aria-label="Risk as">
+            <label><input type="radio" name="ls-riskmode" id="ls-risk-pct" value="pct" checked><span>% of balance</span></label>
+            <label><input type="radio" name="ls-riskmode" id="ls-risk-amt" value="amount"><span>Fixed amount</span></label>
+          </div>
+          <div class="ls-suffix"><input id="ls-risk" type="number" inputmode="decimal" min="0" step="any" value="1" aria-label="Risk per trade"><span id="ls-riskunit">%</span></div>
+        </fieldset>
+
+        <label class="ls-block">Instrument
+          <select id="ls-instr"></select></label>
+
+        <fieldset class="ls-field">
+          <legend>Stop loss</legend>
+          <div class="ls-seg" role="radiogroup" aria-label="Stop loss as">
+            <label><input type="radio" name="ls-stopmode" id="ls-stop-pips" value="pips" checked><span>Distance</span></label>
+            <label><input type="radio" name="ls-stopmode" id="ls-stop-price" value="price"><span>Entry &amp; stop price</span></label>
+          </div>
+          <div id="ls-pips-row">
+            <label class="ls-block"><span id="ls-pips-label">Stop-loss distance (pips)</span>
+              <input id="ls-pips" type="number" inputmode="decimal" min="0" step="any" value="20"></label>
+            <p class="ls-hint" id="ls-pip-def">1 pip = 0.0001 in price</p>
+          </div>
+          <div id="ls-price-row" class="ls-row2" hidden>
+            <label>Entry price
+              <input id="ls-entry" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 1.08500"></label>
+            <label>Stop-loss price
+              <input id="ls-stop" type="number" inputmode="decimal" min="0" step="any" placeholder="e.g. 1.08300"></label>
+          </div>
+        </fieldset>
+
+        <div id="ls-rate-row" class="ls-field ls-rate" hidden>
+          <label for="ls-rate" class="ls-rate-title">Exchange rate</label>
+          <div class="ls-rate-line"><span id="ls-rate-pre">1 USD =</span>
+            <input id="ls-rate" type="number" inputmode="decimal" min="0" step="any"><span id="ls-rate-post">EUR</span></div>
+          <p class="ls-hint" id="ls-rate-src"></p>
+        </div>
+        <p id="ls-fx-status" class="fine ls-fx" role="status">Loading ECB exchange rates...</p>
+
+        <details class="tech ls-adv">
+          <summary>Broker settings (contract size, lot step)</summary>
+          <label class="ls-block">Contract size (units per 1.00 lot)
+            <input id="ls-contract" type="number" inputmode="decimal" min="0" step="any"></label>
+          <p class="ls-hint" id="ls-contract-def"></p>
+          <div class="ls-row2">
+            <label>Lot step
+              <input id="ls-step" type="number" inputmode="decimal" min="0" step="any" value="0.01"></label>
+            <label>Minimum lot
+              <input id="ls-minlot" type="number" inputmode="decimal" min="0" step="any" value="0.01"></label>
+          </div>
+          <p class="ls-hint">In MetaTrader: right-click the symbol in Market Watch &rarr; Specification: "Contract size", "Minimal volume", "Volume step".</p>
+        </details>
+      </div>
+
+      <div class="ls-side">
+        <div class="ls-card ls-result" aria-live="polite">
+          <div id="ls-out" data-lots=""></div>
+        </div>
+        <aside class="ls-cta">
+          <p><strong>Log every trade's size, P/L and R automatically.</strong> The APXTT Excel trading journal calculates the lot size,
+            P/L and R:R from your entry and stop, and builds the statistics for you.</p>
+          <p class="ls-cta-links"><a class="btn btn-green" href="https://stvert.gumroad.com/l/apxtt-premium-journal" rel="noopener">Excel trading journal &middot; $20</a>
+            <a class="btn btn-ghost" href="https://stvert.gumroad.com/l/apxtt-free-demo" rel="noopener">Free demo</a></p>
+          <p class="ls-cta-fine">One payment, no subscription. Desktop Excel for Windows.</p>
+        </aside>
+      </div>
+    </form>
+    <p class="fine ls-privacy">Runs in your browser: no cookies, no analytics, nothing you type is sent anywhere. The only request is for the
+      day's ECB reference rates from <a href="https://frankfurter.dev" rel="noopener">frankfurter.dev</a>, kept on your device for 12 hours.
+      Spread, commission and slippage are not included. A calculator, not financial advice.</p>
+  </div>
+</section>
+
+<section id="conventions" class="section section-alt">
+  <div class="wrap narrow">
+    <h2>Pip and contract conventions used here</h2>
+    <p>Wrong pip sizes are the most common reason lot size calculators and journals give wrong answers (a JPY pair treated
+      like EURUSD is off by a factor of 100). These are the values this page uses. If your broker differs, use the entry and stop
+      prices instead of pips, and set the contract size under Broker settings.</p>
+    <div class="table-wrap">
+      <table class="compare ls-conv">
+        <thead><tr><th scope="col">Instrument</th><th scope="col">1.00 lot</th><th scope="col">1 pip / point</th><th scope="col">Value per pip, 1 lot</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Forex (EURUSD, GBPUSD, EURGBP ...)</th><td>100,000 base currency</td><td>0.0001</td><td>10 units of the quote currency</td></tr>
+          <tr><th scope="row">Forex quoted in JPY or HUF (USDJPY, EURHUF ...)</th><td>100,000 base currency</td><td>0.01</td><td>1,000 JPY / HUF</td></tr>
+          <tr><th scope="row">Gold (XAUUSD)</th><td>100 oz</td><td>0.10 (broker tick 0.01)</td><td>10 USD</td></tr>
+          <tr><th scope="row">Silver (XAGUSD)</th><td>5,000 oz</td><td>0.01 (broker tick 0.001)</td><td>50 USD</td></tr>
+          <tr><th scope="row">Indices (US30, NAS100, SPX500, GER40, UK100, JP225)</th><td>1 &times; index (varies by broker)</td><td>1 point = 1.0</td><td>1 unit of the index currency</td></tr>
+          <tr><th scope="row">Crypto (BTCUSD, ETHUSD)</th><td>1 coin (varies by broker)</td><td>1 point = 1.0 USD</td><td>1 USD</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="fine">Gold has no single "pip" convention: some traders and sites call 0.01 a pip, others 0.10 or 1.00. Here 1 pip = 0.10, so a
+      move from 2000.00 to 1990.00 is 100 pips. Entering the entry and stop price avoids the question entirely.
+      Values per pip are converted to your account currency with the ECB reference rate of the day, or the rate you type.
+      When the account currency is the pair's base currency (USDJPY on a USD account) and you enter prices, the conversion uses
+      your entry price.</p>
+  </div>
+</section>
+
+<section id="volatility" class="section">
+  <div class="wrap narrow">
+    <h2>Coming soon: volatility-weighted lot size</h2>
+    <div class="ls-soon">
+      <p class="ls-soon-tag">Planned feature &middot; not built yet</p>
+      <p>A fixed stop of 20 pips means one thing in a quiet hour and another in the NFP hour. The planned version takes the expected
+        range for the coming hour from the same model as our <a href="news-volatility.html">News Volatility Warning</a> indicator for MT5
+        and scales the stop to it. A bigger expected range around NFP, CPI or FOMC means a wider stop and a smaller position for the same
+        money at risk. It is not available yet, and we will not show numbers for it until it has been tested the way the indicator was.</p>
+      <label class="ls-soon-toggle"><input type="checkbox" disabled aria-disabled="true"> <span>Scale the size to the next hour's expected range</span>
+        <span class="ls-soon-badge">coming soon</span></label>
+      <p class="fine">The indicator itself is available now for MT5:
+        <a href="https://stvert.gumroad.com/l/apxtt-news-volatility" rel="noopener">News Volatility Warning, $19</a>.</p>
+    </div>
+  </div>
+</section>
+
+<section id="faq" class="section section-alt">
+  <div class="wrap narrow">
+    <h2>FAQ</h2>
+    <h3>How is the lot size calculated?</h3>
+    <p>Lot size = money at risk &divide; (stop distance in price &times; contract size &times; exchange rate from the quote currency
+      to your account currency), rounded down to your broker's lot step. Example: a 10,000 USD account risking 1% (100 USD) on EURUSD
+      with a 20-pip stop. One lot is 100,000 EUR, so a 0.0020 move costs 200 USD per lot, and 100 &divide; 200 = <strong>0.50 lots</strong>.
+      With USDJPY at 150.00 the pip value is 100,000 &times; 0.01 &divide; 150 = 6.67 USD per lot, a 20-pip stop costs 133.33 USD per lot,
+      and the size is <strong>0.75 lots</strong>.</p>
+    <h3>What is the difference between a pip and a point?</h3>
+    <p>For currency pairs a pip is the fourth decimal (0.0001), or the second for pairs quoted in JPY or HUF (0.01). For indices and
+      crypto this page uses points of 1.0. MetaTrader's "points" are different again: a point there is the smallest price step, which
+      on a 5-digit EURUSD quote is 0.00001, a tenth of a pip. If your platform shows a stop of 200 points on EURUSD, that is 20 pips.</p>
+    <h3>Why is the size rounded down, not to the nearest step?</h3>
+    <p>Brokers accept sizes only in steps, usually 0.01 lots. Rounding up would put more than your chosen risk on the trade; rounding
+      down never does. The calculator shows the money at risk at the rounded size and warns when rounding cuts the risk by more than
+      10%, or when even the minimum lot would risk more than you chose. Small accounts with wide stops hit this often.</p>
+    <h3>Why do index and crypto contract sizes vary by broker?</h3>
+    <p>Index and crypto CFDs are defined by each broker. One lot of US30 can be 1, 10 or 0.1 times the index; one lot of BTCUSD can be
+      one coin or a fraction of one. Forex (100,000 units) and gold (100 oz) are close to universal, though not guaranteed. Check
+      "Contract size" in your platform's symbol specification and enter it under Broker settings; the result changes with it.</p>
+    <h3>Which exchange rate is used?</h3>
+    <p>The European Central Bank's reference rates, published once a working day around 16:00 CET, through the free frankfurter.dev
+      service. Your broker converts at the live rate, so the money at risk can differ slightly, more on volatile days. For an exact
+      number, type the live rate into the exchange rate field; it is written the way your platform quotes it (for example 1 USD = 150 JPY).</p>
+    <h3>Does it include spread and commission?</h3>
+    <p>No. The risk is the loss between entry and stop. Spread, commission and slippage at the stop add to it, so a trade with a
+      tight stop costs more than the number shown. <a href="edge-check.html">Edge Check</a> shows what costs do to a trade record.</p>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <span>&copy; 2026 Apex Trading Tools &middot; Pattern Traders</span>
+    <span class="social">
+      <a href="privacy.html">Privacy</a>
+      <a href="https://www.instagram.com/apextradingtools/" rel="noopener">Instagram</a>
+      <a href="https://www.youtube.com/@apxtttools" rel="noopener">YouTube</a>
+    </span>
+  </div>
+  <p class="wrap disclaimer">A calculator, not financial advice. Check the result against your platform before you trade. Trading involves risk of loss.</p>
+</footer>
+<script src="js/lot-size.js?v=20261028a"></script>
+</body>
+</html>
