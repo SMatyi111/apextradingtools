@@ -1,5 +1,7 @@
-/* APXTT Lot Size Calculator - runs entirely in the browser. No analytics, no cookies, no tracking.
- * The only network request this file makes is one GET for ECB reference exchange rates
+/* APXTT Lot Size Calculator - runs entirely in the browser: nothing typed into it is sent anywhere.
+ * The page also loads GoatCounter (anonymous visit counts, no cookies); this file sends it one event name,
+ * "calc-result", never a number or any other input. The only other network request this file makes is one GET
+ * for ECB reference exchange rates
  * (api.frankfurter.dev, no key, CORS-enabled). The rates are kept in this browser's local storage
  * for 12 hours. If the request fails, every conversion rate can be typed in by hand.
  *
@@ -153,6 +155,11 @@
   var fx = { rates: null, date: null, state: "loading" };
 
   function $(id) { return document.getElementById(id); }
+  // GoatCounter custom event; safe when GoatCounter is blocked. Only fixed names, never user input.
+  function gcEvent(name) {
+    if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true });
+  }
+  var userTouched = false, resultCounted = false;  // count the first result the visitor produced, once per page view
   function val(id) { var e = $(id); return e ? e.value : ""; }
 
   function fmt(x, d) {
@@ -311,6 +318,7 @@
     }
     out.innerHTML = html;
     out.setAttribute("data-lots", String(R.lots));
+    if (userTouched && !resultCounted) { resultCounted = true; gcEvent("calc-result"); }
   }
 
   function init() {
@@ -334,11 +342,13 @@
 
     var form = $("ls-form");
     form.addEventListener("input", function (e) {
+      userTouched = true;
       if (e.target && e.target.id === "ls-rate") manualRate = e.target.value.trim() !== "";
       if (e.target && (e.target.id === "ls-instr" || e.target.id === "ls-ccy")) manualRate = false;
       render();
     });
     form.addEventListener("change", function (e) {
+      userTouched = true;
       if (e.target && (e.target.id === "ls-instr" || e.target.id === "ls-ccy")) { manualRate = false; $("ls-contract").value = ""; }
       render();
     });

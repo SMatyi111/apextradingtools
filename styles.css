@@ -398,3 +398,33 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 0.88em; color
   .ls-table th, .ls-table td { padding: 7px 8px; font-size: 0.84rem; }
   .ls-conv th, .ls-conv td { padding: 8px 6px; font-size: 0.8rem; }
 }
+
+/* ---------------------------------------------------------------- feedback widget (js/feedback.js) */
+.fb[hidden] { display: none; }
+.fb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; align-items: start; }
+.fb-card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; margin: 0; }
+.fb-card p { margin: 0; }
+.fb-q { display: block; color: var(--text) !important; font-weight: 600; margin: 0 0 4px; }
+.fb-sub, .fb-count, .fb-notice { font-size: 0.8rem; color: var(--muted); }
+.fb-opts { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.fb-opt { font: inherit; font-size: 0.88rem; font-weight: 600; color: var(--text); background: var(--ink); border: 1px solid var(--line);
+  border-radius: 999px; padding: 7px 14px; cursor: pointer; }
+.fb-opt:hover:not(:disabled) { border-color: var(--green); }
+.fb-opt:disabled { cursor: default; opacity: 0.55; }
+.fb-opt[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; opacity: 1; }
+.fb-opt:focus-visible, .fb-send:focus-visible { outline: 2px solid var(--green-hi); outline-offset: 2px; }
+.fb-thanks { color: var(--green-hi) !important; font-weight: 600; min-height: 1.4em; }
+.fb-ask textarea, .fb-ask input { display: block; width: 100%; font: inherit; font-size: 0.95rem; color: var(--text); background: var(--ink);
+  border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; margin-top: 8px; }
+.fb-ask textarea { resize: vertical; min-height: 96px; }
+.fb-ask textarea:focus-visible, .fb-ask input:focus-visible { outline: 2px solid var(--green-hi); outline-offset: 1px; }
+.fb-count { text-align: right; margin-top: 2px !important; }
+.fb-email-label { display: block; font-size: 0.88rem; color: var(--muted); margin-top: 6px; }
+.fb-email-label span { font-size: 0.8rem; }
+.fb-row { margin-top: 12px !important; }
+.fb-send { font: inherit; font-weight: 600; padding: 8px 22px; cursor: pointer; background: transparent; }
+.fb-send:disabled { opacity: 0.6; cursor: default; }
+.fb-status { min-height: 1.4em; margin-top: 8px !important; font-size: 0.9rem; color: var(--text); }
+.fb-warn { color: #f5a623 !important; }
+.fb-ok { color: var(--green-hi) !important; font-weight: 600; }
+.fb-notice { margin-top: 6px !important; }

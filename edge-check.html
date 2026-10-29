@@ -4,12 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Edge Check: is your trading edge real, or luck? (free, runs in your browser) | APXTT</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2302192b'/%3E%3Cg fill='%231aa82a'%3E%3Crect x='5' y='10' width='4' height='9'/%3E%3Crect x='11' y='14' width='4' height='6'/%3E%3Crect x='17' y='9' width='4' height='9'/%3E%3Crect x='23' y='5' width='4' height='12'/%3E%3C/g%3E%3C/svg%3E">
 <meta name="description" content="Drop your MT5/MT4 trade history, your APXTT journal or a CSV. Edge Check tests whether your results stand out from luck, checks stability and costs, and simulates how many trades you need. Runs in your browser; nothing is uploaded.">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Is your edge real, or luck?">
 <meta property="og:description" content="Free statistics check for your trade history. Runs in your browser; nothing is uploaded.">
 <meta property="og:url" content="https://smatyi111.github.io/apextradingtools/edge-check.html">
-<link rel="stylesheet" href="styles.css?v=20261028a">
+<link rel="stylesheet" href="styles.css?v=20261029a">
 </head>
 <body>
 
@@ -31,7 +32,7 @@
       <a href="#check">Check</a>
       <a href="#read">How to read it</a>
       <a href="#formats">File formats</a>
-      <a href="lot-size-calculator.html">Lot Size Calculator</a>
+      <a href="lot-size-calculator.html" data-goatcounter-click="nav-lot-size">Lot Size Calculator</a>
     </nav>
   </div>
 </header>
@@ -44,11 +45,12 @@
     <p class="lead">Drop in your trade history. <strong>Edge Check</strong> tests whether your results stand out from luck after
       costs, checks whether they hold up across time, and simulates how many trades you would need before they mean something.</p>
     <div class="ec-privacy" role="note">
-      <strong>Your trades never leave your computer.</strong> This page reads the file inside your browser. Nothing is
-      uploaded, nothing is stored on a server, and there is no analytics or tracking on this page. You can disconnect from
-      the internet after the page has loaded and it still works.
+      <strong>Your trades never leave your computer.</strong> This page reads the file inside your browser. The file is not
+      uploaded and nothing from it is stored on a server. You can disconnect from the internet after the page has loaded and it still works.
       <span class="ec-privacy-small">Two small exceptions, both optional or local: if you enter a paid report key, that key alone is
-      sent to Gumroad to check it; and this browser remembers how many full reports you have used (stored only on your device).</span>
+      sent to Gumroad to check it; and this browser remembers how many full reports you have used (stored only on your device).
+      Separately, the page counts anonymous visits and button clicks, with no cookies; never your trades, file names or numbers
+      (<a href="privacy.html">privacy notice</a>).</span>
     </div>
     <p class="fine">A statistics tool, not financial advice &middot; past results do not guarantee future results</p>
   </div>
@@ -202,6 +204,8 @@
     <p class="fine">Reports in languages other than English are not recognised yet; use the export script or a CSV.</p>
   </div>
 </section>
+
+<section id="feedback" class="section fb" data-fb-page="edge-check" hidden></section>
 </main>
 
 <footer class="footer">
@@ -209,13 +213,16 @@
     <span>&copy; 2026 Apex Trading Tools &middot; Pattern Traders</span>
     <span class="social">
       <a href="privacy.html">Privacy</a>
-      <a href="https://www.instagram.com/apextradingtools/" rel="noopener">Instagram</a>
-      <a href="https://www.youtube.com/@apxtttools" rel="noopener">YouTube</a>
+      <a href="https://www.instagram.com/apextradingtools/" rel="noopener" data-goatcounter-click="out-instagram">Instagram</a>
+      <a href="https://www.youtube.com/@apxtttools" rel="noopener" data-goatcounter-click="out-youtube">YouTube</a>
     </span>
   </div>
   <p class="wrap disclaimer">A statistics tool, not financial advice. Past results do not guarantee future results. Trading involves risk of loss.</p>
 </footer>
 <script src="js/edge-check-examples.js?v=20261018a"></script>
-<script src="js/edge-check.js?v=20261018b"></script>
+<script src="js/edge-check.js?v=20261029a"></script>
+<script src="js/feedback.js?v=20261029a"></script>
+<!-- Anonymous visit counts without cookies (GoatCounter, see privacy.html). The endpoint is set here only; change it if the account code differs. -->
+<script data-goatcounter="https://apxtt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

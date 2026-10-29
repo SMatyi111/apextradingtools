@@ -13,7 +13,7 @@
 <meta property="og:description" content="Free position size calculator: risk %, stop loss, any account currency. Pip conventions stated, rounded down to your broker's lot step. Runs in your browser.">
 <meta property="og:url" content="https://smatyi111.github.io/apextradingtools/lot-size-calculator.html">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="styles.css?v=20261028a">
+<link rel="stylesheet" href="styles.css?v=20261029a">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -48,11 +48,11 @@
       <span class="brand-text">APXTT</span>
     </a>
     <nav>
-      <a href="index.html">Journal</a>
-      <a href="edge-check.html">Edge Check</a>
+      <a href="index.html" data-goatcounter-click="nav-journal">Journal</a>
+      <a href="edge-check.html" data-goatcounter-click="nav-edge-check">Edge Check</a>
       <a href="#conventions">Pip conventions</a>
       <a href="#faq">FAQ</a>
-      <a href="news-volatility.html">News Volatility</a>
+      <a href="news-volatility.html" data-goatcounter-click="nav-news-volatility">News Volatility</a>
     </nav>
   </div>
 </header>
@@ -140,14 +140,14 @@
         <aside class="ls-cta">
           <p><strong>Log every trade's size, P/L and R automatically.</strong> The APXTT Excel trading journal calculates the lot size,
             P/L and R:R from your entry and stop, and builds the statistics for you.</p>
-          <p class="ls-cta-links"><a class="btn btn-green" href="https://stvert.gumroad.com/l/apxtt-premium-journal" rel="noopener">Excel trading journal &middot; $20</a>
-            <a class="btn btn-ghost" href="https://stvert.gumroad.com/l/apxtt-free-demo" rel="noopener">Free demo</a></p>
+          <p class="ls-cta-links"><a class="btn btn-green" href="https://stvert.gumroad.com/l/apxtt-premium-journal" data-goatcounter-click="gumroad-journal" rel="noopener">Excel trading journal &middot; $20</a>
+            <a class="btn btn-ghost" href="https://stvert.gumroad.com/l/apxtt-free-demo" data-goatcounter-click="gumroad-demo" rel="noopener">Free demo</a></p>
           <p class="ls-cta-fine">One payment, no subscription. Desktop Excel for Windows.</p>
         </aside>
       </div>
     </form>
-    <p class="fine ls-privacy">Runs in your browser: no cookies, no analytics, nothing you type is sent anywhere. The only request is for the
-      day's ECB reference rates from <a href="https://frankfurter.dev" rel="noopener">frankfurter.dev</a>, kept on your device for 12 hours.
+    <p class="fine ls-privacy">Runs in your browser: nothing you type into the calculator is sent anywhere. The page counts anonymous visits and button clicks, with no cookies
+      (<a href="privacy.html">privacy notice</a>). The calculator's only request is for the day's ECB reference rates from <a href="https://frankfurter.dev" rel="noopener" data-goatcounter-click="out-frankfurter">frankfurter.dev</a>, kept on your device for 12 hours.
       Spread, commission and slippage are not included. A calculator, not financial advice.</p>
   </div>
 </section>
@@ -191,7 +191,7 @@
       <label class="ls-soon-toggle"><input type="checkbox" disabled aria-disabled="true"> <span>Scale the size to the next hour's expected range</span>
         <span class="ls-soon-badge">coming soon</span></label>
       <p class="fine">The indicator itself is available now for MT5:
-        <a href="https://stvert.gumroad.com/l/apxtt-news-volatility" rel="noopener">News Volatility Warning, $19</a>.</p>
+        <a href="https://stvert.gumroad.com/l/apxtt-news-volatility" data-goatcounter-click="gumroad-newsvol" rel="noopener">News Volatility Warning, $19</a>.</p>
     </div>
   </div>
 </section>
@@ -226,6 +226,8 @@
       tight stop costs more than the number shown. <a href="edge-check.html">Edge Check</a> shows what costs do to a trade record.</p>
   </div>
 </section>
+
+<section id="feedback" class="section fb" data-fb-page="calculator" hidden></section>
 </main>
 
 <footer class="footer">
@@ -233,12 +235,15 @@
     <span>&copy; 2026 Apex Trading Tools &middot; Pattern Traders</span>
     <span class="social">
       <a href="privacy.html">Privacy</a>
-      <a href="https://www.instagram.com/apextradingtools/" rel="noopener">Instagram</a>
-      <a href="https://www.youtube.com/@apxtttools" rel="noopener">YouTube</a>
+      <a href="https://www.instagram.com/apextradingtools/" rel="noopener" data-goatcounter-click="out-instagram">Instagram</a>
+      <a href="https://www.youtube.com/@apxtttools" rel="noopener" data-goatcounter-click="out-youtube">YouTube</a>
     </span>
   </div>
   <p class="wrap disclaimer">A calculator, not financial advice. Check the result against your platform before you trade. Trading involves risk of loss.</p>
 </footer>
-<script src="js/lot-size.js?v=20261028a"></script>
+<script src="js/lot-size.js?v=20261029a"></script>
+<script src="js/feedback.js?v=20261029a"></script>
+<!-- Anonymous visit counts without cookies (GoatCounter, see privacy.html). The endpoint is set here only; change it if the account code differs. -->
+<script data-goatcounter="https://apxtt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

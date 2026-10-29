@@ -1,6 +1,8 @@
-/* APXTT Edge Check - runs entirely in the browser. No uploads, no analytics, no tracking.
+/* APXTT Edge Check - runs entirely in the browser. No uploads: trade data never leaves the browser.
  * The only network request this file can make is the optional license-key check against Gumroad
- * (product id + license key only; never any trade data).
+ * (product id + license key only; never any trade data). The page also loads GoatCounter (anonymous visit
+ * counts, no cookies); this file sends it fixed event names only (edgecheck-run, edgecheck-example,
+ * edgecheck-unlock), never a number, file name or any other input.
  *
  * Part 1 (EC core) is pure computation and also runs under Node for the Python cross-check
  * (tools/edge_check_run_js.js vs tools/edge_check_ref.py). Part 2 is the page UI.
@@ -923,6 +925,10 @@
 
   function $(id) { return document.getElementById(id); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  // GoatCounter custom event; safe when GoatCounter is blocked. Only fixed names, never user input.
+  function gcEvent(name) {
+    if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true });
+  }
   var fmt = EC.fmt, fmtP = EC.fmtP;
   function pct(x, d) { return x === null || x === undefined ? "-" : (100 * x).toFixed(d === undefined ? 0 : d) + "%"; }
   function pctP(x) { return x < 0.001 ? (x === 0 ? "0%" : "< 0.1%") : (100 * x).toFixed(1) + "%"; }
@@ -990,6 +996,7 @@
       (dates.length ? ", " + dates[0].slice(0, 10) + " to " + dates[dates.length - 1].slice(0, 10) : "") + "." +
       (info.warnings && info.warnings.length ? '<br><span class="ec-warn">' + info.warnings.map(esc).join("<br>") + "</span>" : "") +
       (exampleId ? "" : '<br><span class="live-sub">Check that the count and total match your statement before reading the result.</span>');
+    gcEvent(exampleId ? "edgecheck-example" : "edgecheck-run");
     run();
   }
   function loadFile(file) {
@@ -1276,18 +1283,19 @@
       "<p>The full report adds the forward simulation (how many trades before your result means something; the range of your next 100 and 250 trades) and the drawdown simulation (risk per trade vs the chance of a -20% or -50% drawdown). The verdict and checks above stay free, and the 5 examples always show the full report.</p>";
     if (kind === "email") {
       html = value + "<p>You have used the " + GATE.FREE_OWN_REPORTS + " free full reports in this browser. Get " + (GATE.CREDITS_ENABLED ? GATE.EMAIL_REPORTS + " more" : "unlimited full reports during the launch") + " with a free code by email:</p>" +
-        '<p><a class="btn btn-green" href="' + GATE.EMAIL_URL + '" rel="noopener" target="_blank">Get the free unlock code by email</a></p>' +
+        '<p><a class="btn btn-green" href="' + GATE.EMAIL_URL + '" rel="noopener" target="_blank" data-gc="gumroad-edgecheck">Get the free unlock code by email</a></p>' +
         '<p class="fine">The code comes from our Gumroad page (price $0). Gumroad delivers the code to your email. We only use it for Edge Check how-to messages; product news only if you subscribe to it separately. Your trades are not sent anywhere.</p>' +
         '<form id="ec-code-form" class="ec-inline"><label for="ec-code">Unlock code</label><input id="ec-code" autocomplete="off" spellcheck="false" placeholder="XXXX-XXXX-XXXX"><button class="btn btn-ghost" type="submit">Unlock</button></form><p id="ec-code-msg" class="fine" role="status"></p>';
     } else {
       html = value + "<p>You have used the free and email reports in this browser. More full reports need a report key:</p>" +
         "<p><strong>" + GATE.LICENSE_USES + " full reports per key" + (GATE.CREDITS_PRICE ? " for " + esc(GATE.CREDITS_PRICE) : "") + ".</strong> " + (GATE.CREDITS_PRICE ? "" : "The price is shown on the Gumroad page before you pay. ") +
         "One report is used per new trade file; re-running the same file with other settings is free.</p>" +
-        '<p><a class="btn btn-green" href="' + GATE.CREDITS_URL + '" rel="noopener" target="_blank">Get a report key on Gumroad</a></p>' +
+        '<p><a class="btn btn-green" href="' + GATE.CREDITS_URL + '" rel="noopener" target="_blank" data-gc="gumroad-edgecheck-key">Get a report key on Gumroad</a></p>' +
         '<form id="ec-key-form" class="ec-inline"><label for="ec-key">Report key</label><input id="ec-key" autocomplete="off" spellcheck="false" value="' + esc(s.license.key || "") + '" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"><button class="btn btn-ghost" type="submit">Use 1 report</button></form><p id="ec-key-msg" class="fine" role="status"></p>' +
         '<p class="fine">When you press the button, only the key and our product id are sent to Gumroad, to check the key and count one use. Your trades are never sent. Gumroad sees your IP address, as with any web request.</p>';
     }
     el.innerHTML = html;
+    Array.prototype.forEach.call(el.querySelectorAll("a[data-gc]"), function (a) { a.onclick = function () { gcEvent(a.getAttribute("data-gc")); }; });
     var cf = $("ec-code-form");
     if (cf) cf.onsubmit = function (e) { e.preventDefault(); tryCode($("ec-code").value); };
     var kf = $("ec-key-form");
@@ -1300,6 +1308,7 @@
     });
   }
   function tryCode(code) {
+    gcEvent("edgecheck-unlock");
     var c = String(code || "").trim().toUpperCase();
     sha256hex(c).then(function (h) {
       if (h !== GATE.UNLOCK_SHA256) { $("ec-code-msg").textContent = "That code is not right. Check the email from Gumroad."; return; }
@@ -1309,6 +1318,7 @@
   function tryKey(key) {
     var k = String(key || "").trim(), msg = $("ec-key-msg");
     if (!k) { msg.textContent = "Enter the key from your Gumroad receipt."; return; }
+    gcEvent("edgecheck-unlock");
     msg.textContent = "Checking the key with Gumroad ...";
     var body = "product_id=" + encodeURIComponent(GATE.GUMROAD_PRODUCT_ID) + "&license_key=" + encodeURIComponent(k) + "&increment_uses_count=true";
     fetch("https://api.gumroad.com/v2/licenses/verify", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: body, credentials: "omit", referrerPolicy: "no-referrer" })
