@@ -159,7 +159,7 @@
   function gcEvent(name) {
     if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true });
   }
-  var userTouched = false, resultCounted = false;  // count the first result the visitor produced, once per page view
+  var userTouched = false, resultCounted = false, lastOutHtml = "";  // count the first result the visitor produced, once per page view
   function val(id) { var e = $(id); return e ? e.value : ""; }
 
   function fmt(x, d) {
@@ -289,6 +289,7 @@
       out.innerHTML = "<p class=\"ls-big ls-big-empty\">&ndash;</p><ul class=\"ls-errors\">" +
         R.errors.map(function (e) { return "<li>" + esc(e) + "</li>"; }).join("") + "</ul>";
       out.setAttribute("data-lots", "");
+      lastOutHtml = "";
       return;
     }
     var unitWord = spec.cls === "fx" ? spec.base : spec.cls === "metal" ? "oz" : spec.cls === "crypto" ? spec.base : "contracts";
@@ -316,12 +317,20 @@
         "The exact size is " + fmt(R.lotsRaw, 4) + " lots; the broker step of " + R.lotStep + " rounds it down to " + lotsTxt +
         ", so this trade risks " + money(R.riskAtLots, inp.account) + " instead of " + money(R.riskMoney, inp.account) + ".</p>";
     }
-    out.innerHTML = html;
+    html += "<p class=\"ls-next\"><strong>Next: log this trade.</strong> " +
+      "<a class=\"ls-next-link\" href=\"https://stvert.gumroad.com/l/apxtt-free-demo\" rel=\"noopener\">Get the free Excel journal demo &rarr;</a>" +
+      "<span class=\"ls-sub\">Excel runs on your computer: Gumroad emails you the download link, so you can grab it on your phone now and open it later.</span></p>";
+    // Redraw only when the result changed: a blur re-render under the finger would swallow a tap on the link.
+    if (html !== lastOutHtml) { out.innerHTML = html; lastOutHtml = html; }
     out.setAttribute("data-lots", String(R.lots));
     if (userTouched && !resultCounted) { resultCounted = true; gcEvent("calc-result"); }
   }
 
   function init() {
+    // The result is re-rendered on every input, so the demo link inside it is counted by delegation.
+    $("ls-out").addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest(".ls-next-link")) gcEvent("gumroad-demo-result");
+    });
     var sel = $("ls-instr");
     var groups = [["fx", "Forex"], ["metal", "Metals"], ["index", "Indices (CFD)"], ["crypto", "Crypto (CFD)"]];
     groups.forEach(function (g) {
