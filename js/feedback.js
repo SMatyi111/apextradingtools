@@ -33,6 +33,7 @@ var ENTRY_EMAIL = 'entry.2083535164';
       options: ["A tool I need", "A question about trading stats", "Something else"]
     }
   };
+  PAGES["index-b"] = PAGES.index;  // edge-or-luck.html (A/B test variant): same box, counted separately
   var MAX_LEN = 1000;
 
   // GoatCounter custom event; does nothing if GoatCounter is blocked or not loaded. Never pass user input here.
@@ -114,7 +115,7 @@ var ENTRY_EMAIL = 'entry.2083535164';
       status.textContent = "Sending...";
       // no-cors: Google Forms does not allow reading the response; a network failure still rejects
       fetch(FORM_ACTION, { method: "POST", mode: "no-cors", body: new URLSearchParams(body) }).then(function () {
-        status.textContent = "Thanks — we read every message.";
+        status.textContent = "Thanks, we read every message.";
         status.className = "fb-status fb-ok";
         ta.value = ""; em.value = ""; cnt.textContent = "0";
         gcEvent("ask/" + page);

@@ -1,0 +1,39 @@
+/* B variant of the home page (edge-or-luck.html). Loaded after styles.css, only on that page. */
+
+/* nav: step numbers */
+.nav-n { color: var(--green-hi); font-weight: 700; font-size: 0.8em; margin-right: 5px; }
+
+/* hero with the three steps */
+.home-hero { padding-bottom: 56px; }
+.home-hero .lead { color: var(--text); font-size: clamp(1.05rem, 2.6vw, 1.3rem); }
+.step-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin: 36px 0 0; text-align: left; }
+.step { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px;
+  display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.step p { margin: 0; color: var(--muted); }
+.step p strong { color: var(--text); }
+.step-n { color: var(--green-hi) !important; text-transform: uppercase; letter-spacing: 0.14em; font-size: 0.8rem; font-weight: 700; }
+.step-n span { display: inline-block; width: 1.7em; height: 1.7em; line-height: 1.7em; text-align: center; border-radius: 50%;
+  background: var(--green); color: #fff; letter-spacing: 0; margin-right: 6px; }
+.step-h { font-size: 1.3rem; text-align: left; margin: 0; }
+.step-price { color: var(--text) !important; font-weight: 700; }
+.step-btns { margin-top: auto !important; padding-top: 8px; display: flex; flex-wrap: wrap; gap: 10px; }
+.step-btns .btn { padding: 10px 20px; }
+.step-alt { font-size: 0.82rem; }
+
+/* step 2 details */
+.eyebrow.center { text-align: center; }
+.log-lead { max-width: 680px; margin: -12px auto 28px; text-align: center; }
+.log-img { width: min(1400px, 100%); margin: 0 auto; border-radius: var(--radius); }
+.log-next { text-align: center; margin-top: 22px; }
+
+/* footer */
+.footer-brand { color: var(--text); margin-right: 6px; }
+.footer-nav { display: flex; flex-wrap: wrap; gap: 8px 18px; }
+.footer-nav a { color: var(--muted); }
+.footer .social { flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .step { padding: 18px 16px; }
+  .footer-nav, .footer .social { justify-content: center; }
+  .footer-brand { display: block; margin: 0 0 4px; }
+}
