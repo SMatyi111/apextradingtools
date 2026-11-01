@@ -37,3 +37,11 @@
   .footer-nav, .footer .social { justify-content: center; }
   .footer-brand { display: block; margin: 0 0 4px; }
 }
+
+/* phone visitors: the demo button says it is emailed (the journal needs desktop Excel) */
+.only-phone { display: none !important; }
+@media (max-width: 760px), (pointer: coarse) {
+  .only-phone { display: block !important; }
+  a.btn.only-phone { display: inline-block !important; }
+  .only-desktop { display: none !important; }
+}
