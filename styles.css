@@ -431,3 +431,8 @@ code { font-family: Consolas, "Courier New", monospace; font-size: 0.88em; color
 .fb-warn { color: #f5a623 !important; }
 .fb-ok { color: var(--green-hi) !important; font-weight: 600; }
 .fb-notice { margin-top: 6px !important; }
+
+/* by-hand comparison (owner 2026-11-04: compare to doing it by hand) */
+.compare.byhand th, .compare.byhand td { text-align: left; vertical-align: top; width: 50%; }
+.compare.byhand td:first-child { color: var(--muted, #9aa7b4); }
+@media (max-width: 560px) { .compare.byhand th, .compare.byhand td { padding: 10px 8px; font-size: 0.9rem; } }
