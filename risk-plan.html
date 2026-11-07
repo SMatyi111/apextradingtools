@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phone risk plan (coming soon) | APXTT</title>
+<meta name="description" content="A phone risk plan for traders: your account, risk % and instruments saved, lot size in two taps, and a losing-streak check. Coming soon, EUR 5.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2302192b'/%3E%3Cg fill='%231aa82a'%3E%3Crect x='5' y='10' width='4' height='9'/%3E%3Crect x='11' y='14' width='4' height='6'/%3E%3Crect x='17' y='9' width='4' height='9'/%3E%3Crect x='23' y='5' width='4' height='12'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="stylesheet" href="styles.css?v=20261029a">
+<style>
+  .rp-list { padding-left: 1.2em; line-height: 1.6; }
+  .rp-form { display: flex; flex-wrap: wrap; gap: .6em; margin: 1.2em 0 .4em; }
+  .rp-form input[type=email] { flex: 1 1 16em; padding: .7em .8em; font-size: 1rem; border-radius: 6px; border: 1px solid #9aa7b2; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .rp-msg { min-height: 1.4em; font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="index.html" aria-label="APXTT home"><span class="brand-text">APXTT</span></a>
+    <nav>
+      <a href="lot-size-calculator.html" data-goatcounter-click="riskplan-back">Lot size calculator</a>
+      <a href="edge-check.html">Edge Check</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="section">
+  <div class="wrap narrow">
+    <p class="eyebrow">Coming soon &middot; &euro;5 one-off</p>
+    <h1>Phone risk plan</h1>
+    <p class="lead">The lot size calculator, made for the phone you trade on, with your plan saved.</p>
+    <ul class="rp-list">
+      <li><strong>Your plan saved:</strong> account balance and currency, risk per trade, your usual instruments and your broker's contract sizes.</li>
+      <li><strong>Lot size in two taps:</strong> pick the instrument, type the stop. Rounded down to your lot step.</li>
+      <li><strong>Losing-streak check:</strong> how many losses in a row your win rate makes likely, and what they do to your account at your risk %.</li>
+      <li>Works offline, nothing you type leaves your phone. One payment, no subscription.</li>
+    </ul>
+    <p><strong>It is not built yet.</strong> We build it if enough traders want it. Leave your email and we send you one message when it is
+      ready (at &euro;5). No payment now, no newsletter.</p>
+    <form id="rp-form" class="rp-form" novalidate>
+      <label for="rp-email" class="sr-only">Email</label>
+      <input id="rp-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
+      <button class="btn btn-green" type="submit">Tell me when it is ready</button>
+    </form>
+    <p id="rp-msg" class="rp-msg" aria-live="polite"></p>
+    <p class="fine">Your email goes to our Google Form (Google as our processor) only when you press the button, and is used only for this one
+      message. See the <a href="privacy.html">privacy notice</a>. Meanwhile the <a href="lot-size-calculator.html">free calculator</a> stays free.</p>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="wrap footer-inner">
+    <span>&copy; 2026 Apex Trading Tools &middot; Pattern Traders</span>
+    <span class="social"><a href="privacy.html">Privacy</a></span>
+  </div>
+  <p class="wrap disclaimer">A calculator, not financial advice. Trading involves risk of loss.</p>
+</footer>
+<script>
+(function () {
+  "use strict";
+  var FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSfAdqrggV_poFy1oESUB8-BfqUUTVXkGrDBhl5KAoPKHi-4YA/formResponse";
+  var form = document.getElementById("rp-form"), input = document.getElementById("rp-email"), msg = document.getElementById("rp-msg");
+  function gc(name) { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true }); }
+  form.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = input.value.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "Please enter a valid email."; return; }
+    var body = new URLSearchParams();
+    body.append("entry.18593366", "risk-plan-waitlist");
+    body.append("entry.1148851079", "Notify me: phone risk plan EUR 5");
+    body.append("entry.2083535164", email);
+    form.querySelector("button").disabled = true;
+    fetch(FORM_ACTION, { method: "POST", mode: "no-cors", body: body }).then(function () {
+      msg.textContent = "Thanks, you are on the list. One email when it is ready.";
+      form.hidden = true;
+      gc("riskplan-signup");
+    }).catch(function () {
+      msg.textContent = "Could not send. Please try again.";
+      form.querySelector("button").disabled = false;
+    });
+  });
+})();
+</script>
+<script data-goatcounter="https://apxtt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
