@@ -65,20 +65,21 @@
   "use strict";
   var FORM_ACTION = "https://docs.google.com/forms/d/e/1FAIpQLSfAdqrggV_poFy1oESUB8-BfqUUTVXkGrDBhl5KAoPKHi-4YA/formResponse";
   var form = document.getElementById("rp-form"), input = document.getElementById("rp-email"), msg = document.getElementById("rp-msg");
+  var SRC = /[?&]src=ig\b/.test(location.search) ? "-ig" : "";
   function gc(name) { if (window.goatcounter && window.goatcounter.count) window.goatcounter.count({ path: name, title: name, event: true }); }
   form.addEventListener("submit", function (e) {
     e.preventDefault();
     var email = input.value.trim();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "Please enter a valid email."; return; }
     var body = new URLSearchParams();
-    body.append("entry.18593366", "risk-plan-waitlist");
+    body.append("entry.18593366", "risk-plan-waitlist" + SRC);
     body.append("entry.1148851079", "Notify me: phone risk plan EUR 5");
     body.append("entry.2083535164", email);
     form.querySelector("button").disabled = true;
     fetch(FORM_ACTION, { method: "POST", mode: "no-cors", body: body }).then(function () {
       msg.textContent = "Thanks, you are on the list. One email when it is ready.";
       form.hidden = true;
-      gc("riskplan-signup");
+      gc("riskplan-signup" + SRC);
     }).catch(function () {
       msg.textContent = "Could not send. Please try again.";
       form.querySelector("button").disabled = false;

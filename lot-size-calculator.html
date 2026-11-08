@@ -249,6 +249,14 @@
 </footer>
 <script src="js/lot-size.js?v=20261029a"></script>
 <script src="js/feedback.js?v=20261029a"></script>
+<script>
+/* Fake-door test 2026-11-08: count Instagram visitors' taps apart from Google's (?src=ig or an instagram referrer). */
+(function () {
+  var ig = /[?&]src=ig\b/.test(location.search) || /instagram\./.test(document.referrer);
+  var a = document.querySelector('a[data-goatcounter-click="riskplan-tap"]');
+  if (ig && a) { a.setAttribute("data-goatcounter-click", "riskplan-tap-ig"); a.href = "risk-plan.html?src=ig"; }
+})();
+</script>
 <!-- Anonymous visit counts without cookies (GoatCounter, see privacy.html). The endpoint is set here only; change it if the account code differs. -->
 <script data-goatcounter="https://apxtt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
