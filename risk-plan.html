@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Phone risk plan (coming soon) | APXTT</title>
-<meta name="description" content="A phone risk plan for traders: your account, risk % and instruments saved, lot size in two taps, and a losing-streak check. Coming soon, EUR 5.">
+<meta name="description" content="A phone risk plan for traders: your account, risk % and instruments saved, lot size in two taps, and a losing-streak check. Coming soon, $5.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%2302192b'/%3E%3Cg fill='%231aa82a'%3E%3Crect x='5' y='10' width='4' height='9'/%3E%3Crect x='11' y='14' width='4' height='6'/%3E%3Crect x='17' y='9' width='4' height='9'/%3E%3Crect x='23' y='5' width='4' height='12'/%3E%3C/g%3E%3C/svg%3E">
 <link rel="stylesheet" href="styles.css?v=20261029a">
@@ -30,7 +30,7 @@
 <main>
 <section class="section">
   <div class="wrap narrow">
-    <p class="eyebrow">Coming soon &middot; &euro;5 one-off</p>
+    <p class="eyebrow">Coming soon &middot; $5 one-off</p>
     <h1>Phone risk plan</h1>
     <p class="lead">The lot size calculator, made for the phone you trade on, with your plan saved.</p>
     <ul class="rp-list">
@@ -40,7 +40,7 @@
       <li>Works offline, nothing you type leaves your phone. One payment, no subscription.</li>
     </ul>
     <p><strong>It is not built yet.</strong> We build it if enough traders want it. Leave your email and we send you one message when it is
-      ready (at &euro;5). No payment now, no newsletter.</p>
+      ready (at $5). No payment now, no newsletter.</p>
     <form id="rp-form" class="rp-form" novalidate>
       <label for="rp-email" class="sr-only">Email</label>
       <input id="rp-email" type="email" inputmode="email" autocomplete="email" placeholder="you@example.com" required>
@@ -73,7 +73,7 @@
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = "Please enter a valid email."; return; }
     var body = new URLSearchParams();
     body.append("entry.18593366", "risk-plan-waitlist" + SRC);
-    body.append("entry.1148851079", "Notify me: phone risk plan EUR 5");
+    body.append("entry.1148851079", "Notify me: phone risk plan $5");
     body.append("entry.2083535164", email);
     form.querySelector("button").disabled = true;
     fetch(FORM_ACTION, { method: "POST", mode: "no-cors", body: body }).then(function () {
