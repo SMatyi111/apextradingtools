@@ -62,6 +62,7 @@
   <div class="wrap hero-inner">
     <p class="eyebrow">Free tool &middot; runs in your browser</p>
     <h1>Lot Size Calculator</h1>
+    <p class="lead"><strong>Prop challenge? Do not pay the fee twice.</strong> Size every trade from your firm's loss limits. <a href="#prop">See how &darr;</a></p>
     <p class="ls-h1-sub">Forex, gold, indices and crypto &middot; any account currency</p>
     <p class="lead">Enter your balance, your risk and your stop loss. You get the position size in lots, rounded down to your
       broker's step, and the money you actually risk at that size. Every pip and contract convention is stated below.</p>
@@ -138,7 +139,7 @@
           <div id="ls-out" data-lots=""></div>
         </div>
         <!-- $5 phone risk-plan fake door removed 2026-11-11 (owner: "Stop the $5 test now"; 41 uses, 0 taps). risk-plan.html kept for old links. -->
-        <aside class="ls-cta">
+        <aside class="ls-cta" id="prop">
           <p><strong>On a prop challenge?</strong> The Drawdown Rulebook turns your firm's daily and maximum loss limits into one
             maximum risk per trade, with the odds of losing streaks worked out (10-page PDF). Or send us your firm's rules and get your
             own one-page plan within 2 business days, with the Rulebook and the Excel journal included.</p>
@@ -250,16 +251,8 @@
   </div>
   <p class="wrap disclaimer">A calculator, not financial advice. Check the result against your platform before you trade. Trading involves risk of loss.</p>
 </footer>
-<script src="js/lot-size.js?v=20261029a"></script>
+<script src="js/lot-size.js?v=20261111a"></script>
 <script src="js/feedback.js?v=20261029a"></script>
-<script>
-/* Fake-door test 2026-11-08: count Instagram visitors' taps apart from Google's (?src=ig or an instagram referrer). */
-(function () {
-  var ig = /[?&]src=ig\b/.test(location.search) || /instagram\./.test(document.referrer);
-  var a = document.querySelector('a[data-goatcounter-click="riskplan-tap"]');
-  if (ig && a) { a.setAttribute("data-goatcounter-click", "riskplan-tap-ig"); a.href = "risk-plan.html?src=ig"; }
-})();
-</script>
 <!-- Anonymous visit counts without cookies (GoatCounter, see privacy.html). The endpoint is set here only; change it if the account code differs. -->
 <script data-goatcounter="https://apxtt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

@@ -317,9 +317,9 @@
         "The exact size is " + fmt(R.lotsRaw, 4) + " lots; the broker step of " + R.lotStep + " rounds it down to " + lotsTxt +
         ", so this trade risks " + money(R.riskAtLots, inp.account) + " instead of " + money(R.riskMoney, inp.account) + ".</p>";
     }
-    html += "<p class=\"ls-next\"><strong>Next: log this trade.</strong> " +
-      "<a class=\"ls-next-link\" href=\"https://stvert.gumroad.com/l/apxtt-free-demo\" rel=\"noopener\">Get the free Excel journal demo &rarr;</a>" +
-      "<span class=\"ls-sub\">Excel runs on your computer: Gumroad emails you the download link, so you can grab it on your phone now and open it later.</span></p>";
+    html += "<p class=\"ls-next\"><strong>On a prop challenge?</strong> " +
+      "<a class=\"ls-next-link\" href=\"#prop\">Turn your loss limits into one max risk per trade &darr;</a>" +
+      "<span class=\"ls-sub\">Drawdown Rulebook $15, or your own plan done for you $49. No results promised.</span></p>";
     // Redraw only when the result changed: a blur re-render under the finger would swallow a tap on the link.
     if (html !== lastOutHtml) { out.innerHTML = html; lastOutHtml = html; }
     out.setAttribute("data-lots", String(R.lots));
