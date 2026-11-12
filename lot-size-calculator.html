@@ -13,7 +13,7 @@
 <meta property="og:description" content="Free position size calculator: risk %, stop loss, any account currency. Pip conventions stated, rounded down to your broker's lot step. Runs in your browser.">
 <meta property="og:url" content="https://smatyi111.github.io/apextradingtools/lot-size-calculator.html">
 <meta name="twitter:card" content="summary">
-<link rel="stylesheet" href="styles.css?v=20261029a">
+<link rel="stylesheet" href="styles.css?v=20261112b">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -62,7 +62,7 @@
   <div class="wrap hero-inner">
     <p class="eyebrow">Free tool &middot; runs in your browser</p>
     <h1>Lot Size Calculator</h1>
-    <p class="lead"><strong>Prop challenge? Do not pay the fee twice.</strong> Size every trade from your firm's loss limits. <a href="#prop">See how &darr;</a></p>
+    <p class="lead"><strong>Prop challenge? Do not pay the fee twice.</strong> Size every trade from your firm's loss limits. <a href="#sheet">Get your free risk sheet &darr;</a></p>
     <p class="ls-h1-sub">Forex, gold, indices and crypto &middot; any account currency</p>
     <p class="lead">Enter your balance, your risk and your stop loss. You get the position size in lots, rounded down to your
       broker's step, and the money you actually risk at that size. Every pip and contract convention is stated below.</p>
@@ -139,6 +139,22 @@
           <div id="ls-out" data-lots=""></div>
         </div>
         <!-- $5 phone risk-plan fake door removed 2026-11-11 (owner: "Stop the $5 test now"; 41 uses, 0 taps). risk-plan.html kept for old links. -->
+        <aside class="ls-cta rs" id="sheet">
+          <p><strong>Free: your prop-challenge risk sheet.</strong> Type your firm's rules. You get your max risk per trade and how many
+            losing trades your limits allow, on screen now and by email.</p>
+          <div id="rs-form" class="rs-form" role="group" aria-label="Free risk sheet">
+            <label>Account size ($)<input id="rs-bal" type="number" inputmode="decimal" min="0" step="any" value="100000"></label>
+            <label>Daily loss limit (%)<input id="rs-daily" type="number" inputmode="decimal" min="0" step="any" value="5"></label>
+            <label>Maximum loss (%)<input id="rs-max" type="number" inputmode="decimal" min="0" step="any" value="10"></label>
+            <label>Trades per day (max)<input id="rs-n" type="number" inputmode="numeric" min="1" step="1" value="3"></label>
+            <label class="rs-wide">Email<input id="rs-email" type="email" autocomplete="email" placeholder="you@example.com" required></label>
+            <button id="rs-go" class="btn btn-green rs-wide" type="button" data-goatcounter-click="sheet-submit">Get my risk sheet</button>
+          </div>
+          <p id="rs-msg" class="rs-msg" role="status"></p>
+          <div id="rs-out" class="rs-out" hidden></div>
+          <p class="ls-cta-fine">Free. We send your sheet and 3 short emails about prop-challenge risk, then stop unless you reply.
+            Unsubscribe any time. Your email goes to our Google Form only when you press the button (<a href="privacy.html">privacy</a>).</p>
+        </aside>
         <aside class="ls-cta" id="prop">
           <p><strong>On a prop challenge?</strong> The Drawdown Rulebook turns your firm's daily and maximum loss limits into one
             maximum risk per trade, with the odds of losing streaks worked out (10-page PDF). Or send us your firm's rules and get your
@@ -251,7 +267,8 @@
   </div>
   <p class="wrap disclaimer">A calculator, not financial advice. Check the result against your platform before you trade. Trading involves risk of loss.</p>
 </footer>
-<script src="js/lot-size.js?v=20261111a"></script>
+<script src="js/lot-size.js?v=20261112a"></script>
+<script src="js/risk-sheet.js?v=20261112b"></script>
 <script src="js/feedback.js?v=20261029a"></script>
 <!-- Anonymous visit counts without cookies (GoatCounter, see privacy.html). The endpoint is set here only; change it if the account code differs. -->
 <script data-goatcounter="https://apxtt.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

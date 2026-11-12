@@ -318,8 +318,8 @@
         ", so this trade risks " + money(R.riskAtLots, inp.account) + " instead of " + money(R.riskMoney, inp.account) + ".</p>";
     }
     html += "<p class=\"ls-next\"><strong>On a prop challenge?</strong> " +
-      "<a class=\"ls-next-link\" href=\"#prop\">Turn your loss limits into one max risk per trade &darr;</a>" +
-      "<span class=\"ls-sub\">Drawdown Rulebook $15, or your own plan done for you $49. No results promised.</span></p>";
+      "<a class=\"ls-next-link\" href=\"#sheet\">Get your free risk sheet: max risk per trade from your firm's limits &darr;</a>" +
+      "<span class=\"ls-sub\">Free, on screen now and by email.</span></p>";
     // Redraw only when the result changed: a blur re-render under the finger would swallow a tap on the link.
     if (html !== lastOutHtml) { out.innerHTML = html; lastOutHtml = html; }
     out.setAttribute("data-lots", String(R.lots));
